@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, ShoppingBag, Filter, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,12 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [hoursOpen, setHoursOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Prevent hydration mismatch by only rendering cart button after client mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(menu.map(item => item.category)));
@@ -194,7 +200,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
       </div>
 
       {/* Floating Cart Button */}
-      {cartCount > 0 && (
+      {isClient && cartCount > 0 && (
         <div className="fixed bottom-4 left-4 right-4 z-50">
           <div className="max-w-4xl mx-auto">
             <Button
@@ -204,7 +210,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
             >
               <ShoppingBag className="w-5 h-5 mr-2" />
               <span className="flex-1">Ver Carrinho ({cartCount} itens)</span>
-              <span className="font-semibold">R$ {cartTotal.toFixed(2)}</span>
+              <span className="font-semibold">R$ {cartTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </Button>
           </div>
         </div>

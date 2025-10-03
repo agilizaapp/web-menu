@@ -21,9 +21,9 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2>Order Not Found</h2>
+          <h2>Pedido Não Encontrado</h2>
           <Button onClick={onBackToMenu} className="mt-4">
-            Back to Menu
+            Voltar ao Cardápio
           </Button>
         </div>
       </div>
@@ -31,11 +31,11 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
   }
 
   const statusSteps = [
-    { key: 'pending', label: 'Order Received', icon: CheckCircle },
-    { key: 'accepted', label: 'Order Confirmed', icon: CheckCircle },
-    { key: 'preparing', label: 'In the Kitchen', icon: ChefHat },
-    { key: 'ready', label: 'Ready for Pickup', icon: Clock },
-    { key: 'delivered', label: 'Delivered', icon: Truck }
+    { key: 'pending', label: 'Pedido Recebido', icon: CheckCircle },
+    { key: 'accepted', label: 'Pedido Confirmado', icon: CheckCircle },
+    { key: 'preparing', label: 'Na Cozinha', icon: ChefHat },
+    { key: 'ready', label: 'Pronto para Retirada', icon: Clock },
+    { key: 'delivered', label: 'Entregue', icon: Truck }
   ];
 
   const getCurrentStepIndex = () => {
@@ -70,7 +70,7 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold">Order Status</h1>
+            <h1 className="text-xl font-semibold">Status do Pedido</h1>
             <p className="text-sm text-muted-foreground">#{order.id}</p>
           </div>
         </div>
@@ -85,39 +85,39 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
                 className={`w-3 h-3 rounded-full ${getStatusColor(order.status)}`}
               />
               <span className="capitalize">
-                {order.status === 'pending' ? 'Order Received' :
-                 order.status === 'accepted' ? 'Order Confirmed' :
-                 order.status === 'preparing' ? 'In the Kitchen' :
-                 order.status === 'ready' ? 'Ready for Pickup' :
-                 order.status === 'delivered' ? 'Delivered' :
-                 order.status === 'rejected' ? 'Order Cancelled' :
+                {order.status === 'pending' ? 'Pedido Recebido' :
+                 order.status === 'accepted' ? 'Pedido Confirmado' :
+                 order.status === 'preparing' ? 'Na Cozinha' :
+                 order.status === 'ready' ? 'Pronto para Retirada' :
+                 order.status === 'delivered' ? 'Entregue' :
+                 order.status === 'rejected' ? 'Pedido Cancelado' :
                  order.status}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {order.status === 'pending' && (
-              <p>We've received your order and are processing it.</p>
+              <p>Recebemos seu pedido e estamos processando.</p>
             )}
             {order.status === 'accepted' && (
-              <p>Your order has been confirmed and we're starting to prepare it.</p>
+              <p>Seu pedido foi confirmado e estamos começando a prepará-lo.</p>
             )}
             {order.status === 'preparing' && (
-              <p>Our chefs are preparing your delicious meal!</p>
+              <p>Nossos chefs estão preparando sua deliciosa refeição!</p>
             )}
             {order.status === 'ready' && (
-              <p>Your order is ready for pickup or will be delivered soon.</p>
+              <p>Seu pedido está pronto para retirada ou será entregue em breve.</p>
             )}
             {order.status === 'delivered' && (
-              <p>Your order has been delivered. Enjoy your meal!</p>
+              <p>Seu pedido foi entregue. Bom apetite!</p>
             )}
             {order.status === 'rejected' && (
-              <p>Sorry, we had to cancel your order. You will be refunded shortly.</p>
+              <p>Desculpe, tivemos que cancelar seu pedido. Você será reembolsado em breve.</p>
             )}
           </CardContent>
         </Card>
 
-        {/* Progress Steps */}
+        {/* Progress Steps
         {order.status !== 'rejected' && (
           <Card>
             <CardHeader>
@@ -156,19 +156,19 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {/* Order Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Order Details</CardTitle>
+            <CardTitle>Detalhes do Pedido</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {order.items.map(item => (
                 <div key={item.id} className="flex justify-between">
                   <span>{item.quantity}x {item.menuItem.name}</span>
-                  <span>${(item.totalPrice * item.quantity).toFixed(2)}</span>
+                  <span>R$ {(item.totalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               ))}
             </div>
@@ -176,21 +176,21 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${(order.totalAmount - (currentRestaurant.settings.deliveryFee + order.totalAmount * 0.1)).toFixed(2)}</span>
+                <span>R$ {(order.totalAmount - (currentRestaurant.settings.deliveryFee + order.totalAmount * 0.1)).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between">
-                <span>Delivery Fee</span>
-                <span>${currentRestaurant.settings.deliveryFee.toFixed(2)}</span>
+                <span>Taxa de Entrega</span>
+                <span>R$ {currentRestaurant.settings.deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between">
-                <span>Tax</span>
-                <span>${(order.totalAmount * 0.1).toFixed(2)}</span>
+                <span>Taxas</span>
+                <span>R$ {(order.totalAmount * 0.1).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
             <Separator className="my-2" />
             <div className="flex justify-between font-semibold">
               <span>Total</span>
-              <span>${order.totalAmount.toFixed(2)}</span>
+              <span>R$ {order.totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </CardContent>
         </Card>
@@ -198,21 +198,21 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
         {/* Delivery Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Delivery Information</CardTitle>
+            <CardTitle>Informações de Entrega</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div>
-                <span className="font-medium">Name:</span> {order.customerInfo.name}
+                <span className="font-medium">Nome:</span> {order.customerInfo.name}
               </div>
               <div>
-                <span className="font-medium">Phone:</span> {order.customerInfo.phone}
+                <span className="font-medium">Telefone:</span> {order.customerInfo.phone}
               </div>
               <div>
-                <span className="font-medium">Address:</span> {order.customerInfo.address}
+                <span className="font-medium">Endereço:</span> {order.customerInfo.address}
               </div>
               <div>
-                <span className="font-medium">Order Time:</span> {order.createdAt.toLocaleTimeString()}
+                <span className="font-medium">Horário do Pedido:</span> {new Date(order.createdAt).toLocaleTimeString()}
               </div>
             </div>
           </CardContent>
@@ -226,14 +226,14 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
             onClick={handleContactRestaurant}
           >
             <Phone className="w-4 h-4 mr-2" />
-            Contact Restaurant
+            Contatar Restaurante
           </Button>
           <Button 
             onClick={onBackToMenu}
             className="flex-1"
             style={{ backgroundColor: 'var(--restaurant-primary)' }}
           >
-            Order Again
+            Pedir Novamente
           </Button>
         </div>
       </div>
