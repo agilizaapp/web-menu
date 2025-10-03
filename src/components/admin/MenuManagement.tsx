@@ -98,7 +98,7 @@ export const MenuManagement: React.FC = () => {
         <div>
           <h2 className="text-2xl font-semibold">Menu Management</h2>
           <p className="text-muted-foreground">
-            Add, edit, and manage your restaurant's menu items
+            Add, edit, and manage your restaurant&apos;s menu items
           </p>
         </div>
         

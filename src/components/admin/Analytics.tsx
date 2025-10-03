@@ -69,7 +69,7 @@ export const Analytics: React.FC = () => {
       <div>
         <h2 className="text-2xl font-semibold">Analytics & Reports</h2>
         <p className="text-muted-foreground">
-          Track your restaurant's performance and identify trends
+          Track your restaurant&apos;s performance and identify trends
         </p>
       </div>
 
@@ -203,7 +203,7 @@ export const Analytics: React.FC = () => {
             </div>
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-sm">Menu item "Margherita Pizza" updated</span>
+              <span className="text-sm">Menu item &quot;Margherita Pizza&quot; updated</span>
               <span className="text-xs text-muted-foreground ml-auto">5 min ago</span>
             </div>
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
