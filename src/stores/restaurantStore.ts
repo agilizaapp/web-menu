@@ -7,7 +7,7 @@ interface RestaurantStore {
   menu: MenuItem[];
   setCurrentRestaurant: (restaurant: Restaurant) => void;
   updateMenuItem: (itemId: string, updates: Partial<MenuItem>) => void;
-  loadRestaurantData: (restaurantId: string) => void;
+  loadRestaurantData: (restaurantId: number) => void;
   applyTheme: () => void;
 }
 
@@ -17,6 +17,11 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
 
   setCurrentRestaurant: (restaurant: Restaurant) => {
     set({ currentRestaurant: restaurant });
+
+    // Aplica tema automaticamente ao trocar restaurante
+    setTimeout(() => {
+      get().applyTheme();
+    }, 0);
   },
 
   updateMenuItem: (itemId: string, updates: Partial<MenuItem>) => {
@@ -27,21 +32,22 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
     }));
   },
 
-  loadRestaurantData: (restaurantId: string) => {
+  loadRestaurantData: (restaurantId: number) => {
     // Encontra restaurante nos dados mock
     const restaurant = mockRestaurants.find((r) => r.id === restaurantId);
-    
+
     if (restaurant) {
       set({
         currentRestaurant: restaurant,
         menu: mockMenuItems, // Em produção, filtrar por restaurante
       });
+
+      get().applyTheme();
     }
   },
 
   applyTheme: () => {
     const { currentRestaurant } = get();
-    
     if (currentRestaurant && typeof window !== 'undefined') {
       const root = document.documentElement;
       root.style.setProperty('--restaurant-primary', currentRestaurant.theme.primaryColor);

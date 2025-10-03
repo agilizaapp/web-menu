@@ -1,3 +1,6 @@
+export * from './api.types';
+export * from './entities.types';
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -68,19 +71,4 @@ export interface WeeklySchedule {
   friday: DaySchedule;
   saturday: DaySchedule;
   sunday: DaySchedule;
-}
-
-export interface Restaurant {
-  id: string;
-  name: string;
-  theme: RestaurantTheme;
-  settings: {
-    hours: string;
-    customHours?: WeeklySchedule;
-    useCustomHours?: boolean;
-    deliveryFee: number;
-    deliveryZones: string[];
-    pixKey: string;
-  };
-  menu: MenuItem[];
 }
