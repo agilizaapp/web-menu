@@ -58,7 +58,7 @@ const { currentRestaurant, menu, setCurrentRestaurant } = useRestaurantStore();
 - menu: MenuItem[]                                    // Itens do menu
 - setCurrentRestaurant(restaurant: Restaurant): void  // Trocar restaurante
 - updateMenuItem(itemId, updates): void               // Atualizar item (admin)
-- loadRestaurantData(restaurantId: string): void      // Carregar por ID
+- loadRestaurantData(restaurantId: number): void      // Carregar por ID
 - applyTheme(): void                                  // Aplicar tema CSS
 ```
 

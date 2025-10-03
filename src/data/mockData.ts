@@ -1,8 +1,9 @@
-import { Restaurant, MenuItem, Order } from '@/types';
+import { MenuItem, Order } from '@/types';
+import { Restaurant } from '@/types/entities.types';
 
 export const mockRestaurants: Restaurant[] = [
   {
-    id: 'pizza-palace',
+    id: 1,
     name: 'Palácio da Pizza',
     theme: {
       name: 'Palácio da Pizza',
@@ -30,13 +31,13 @@ export const mockRestaurants: Restaurant[] = [
     menu: []
   },
   {
-    id: 'sushi-house',
+    id: 2,
     name: 'Casa do Sushi',
     theme: {
       name: 'Casa do Sushi',
       logo: '🍣',
       primaryColor: '#065F46',
-      secondaryColor: '#ECFDF5', 
+      secondaryColor: '#ECFDF5',
       accentColor: '#10B981'
     },
     settings: {
@@ -58,7 +59,7 @@ export const mockRestaurants: Restaurant[] = [
     menu: []
   },
   {
-    id: 'burger-barn',
+    id: 3,
     name: 'Burger Grill',
     theme: {
       name: 'Burger Grill',
