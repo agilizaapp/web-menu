@@ -81,7 +81,7 @@ export const OrderManagement: React.FC = () => {
             Sound {soundEnabled ? 'On' : 'Off'}
           </Button>
           
-          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+          <Select value={filter} onValueChange={(value) => setFilter(value as typeof filter)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
