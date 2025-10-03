@@ -51,8 +51,9 @@ export const OrderManagement: React.FC = () => {
     }
   };
 
-  const getTimeAgo = (date: Date) => {
-    const minutes = Math.floor((new Date().getTime() - date.getTime()) / (1000 * 60));
+  const getTimeAgo = (date: Date | string) => {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    const minutes = Math.floor((new Date().getTime() - dateObj.getTime()) / (1000 * 60));
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -163,7 +164,7 @@ export const OrderManagement: React.FC = () => {
                         )}
                       </span>
                       <span className="font-medium">
-                        ${(item.totalPrice * item.quantity).toFixed(2)}
+                        ${(item.totalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   ))}
@@ -174,7 +175,7 @@ export const OrderManagement: React.FC = () => {
                 {/* Total */}
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
-                  <span>${order.totalAmount.toFixed(2)}</span>
+                  <span>${order.totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
 
                 {/* Action Buttons */}

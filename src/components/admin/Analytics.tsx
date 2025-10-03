@@ -168,7 +168,7 @@ export const Analytics: React.FC = () => {
                   <div>
                     <h4 className="font-medium">{item.name}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {item.sales} orders • ${item.revenue.toFixed(2)} revenue
+                      {item.sales} orders • ${item.revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} revenue
                     </p>
                   </div>
                 </div>

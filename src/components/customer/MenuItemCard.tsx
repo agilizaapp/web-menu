@@ -34,7 +34,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onClick }) => 
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-semibold line-clamp-1">{item.name}</h3>
           <span className="font-semibold text-lg" style={{ color: 'var(--restaurant-primary)' }}>
-            R$ {item.price.toFixed(2)}
+            R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
         

@@ -41,7 +41,7 @@ export interface Order {
   };
   status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivered' | 'rejected';
   totalAmount: number;
-  createdAt: Date;
+  createdAt: Date | string; // Can be string when deserialized from localStorage
   paymentMethod: 'pix';
   paymentStatus: 'pending' | 'completed' | 'failed';
 }

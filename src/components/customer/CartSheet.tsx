@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,12 @@ interface CartSheetProps {
 
 export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Prevent hydration mismatch by only rendering after client mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   const { 
     cart, 
     updateCartItem, 
@@ -34,7 +40,8 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
     onCheckout?.();
   };
 
-  if (cartCount === 0) return null;
+  // Don't render until client-side mount to prevent hydration mismatch
+  if (!isClient || cartCount === 0) return null;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -80,7 +87,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium truncate">{item.menuItem.name}</h4>
                   <p className="text-sm text-muted-foreground">
-                    ${item.totalPrice.toFixed(2)} each
+                    ${item.totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
                   </p>
 
                   {/* Selected Modifiers */}
@@ -137,7 +144,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
 
                 <div className="text-right">
                   <p className="font-medium">
-                    ${(item.totalPrice * item.quantity).toFixed(2)}
+                    ${(item.totalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
@@ -148,20 +155,20 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
           <div className="border-t pt-4 mt-4 space-y-3">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>${cartTotal.toFixed(2)}</span>
+              <span>${cartTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Delivery Fee</span>
-              <span>${deliveryFee.toFixed(2)}</span>
+              <span>${deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Tax</span>
-              <span>${tax.toFixed(2)}</span>
+              <span>${tax.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-semibold">
               <span>Total</span>
-              <span>${finalTotal.toFixed(2)}</span>
+              <span>${finalTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
 
             <div className="flex gap-2 pt-2">

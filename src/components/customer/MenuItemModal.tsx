@@ -119,7 +119,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
               </div>
               <p className="text-muted-foreground mb-3">{item.description}</p>
               <div className="text-xl font-semibold" style={{ color: 'var(--restaurant-primary)' }}>
-                R$ {item.price.toFixed(2)}
+                R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
 
@@ -146,7 +146,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                         </div>
                         {option.price > 0 && (
                           <span className="text-sm text-muted-foreground">
-                            +${option.price.toFixed(2)}
+                            +${option.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         )}
                       </div>
@@ -168,7 +168,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                         </div>
                         {option.price > 0 && (
                           <span className="text-sm text-muted-foreground">
-                            +${option.price.toFixed(2)}
+                            +${option.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         )}
                       </div>
@@ -205,7 +205,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                 className="px-6"
                 style={{ backgroundColor: 'var(--restaurant-primary)' }}
               >
-                Add to Cart - ${(totalPrice * quantity).toFixed(2)}
+                Add to Cart - ${(totalPrice * quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </Button>
             </div>
           </div>

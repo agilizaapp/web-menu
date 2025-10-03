@@ -17,11 +17,6 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
 
   setCurrentRestaurant: (restaurant: Restaurant) => {
     set({ currentRestaurant: restaurant });
-    
-    // Aplica tema automaticamente ao trocar restaurante
-    setTimeout(() => {
-      get().applyTheme();
-    }, 0);
   },
 
   updateMenuItem: (itemId: string, updates: Partial<MenuItem>) => {
@@ -41,15 +36,13 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
         currentRestaurant: restaurant,
         menu: mockMenuItems, // Em produção, filtrar por restaurante
       });
-      
-      get().applyTheme();
     }
   },
 
   applyTheme: () => {
     const { currentRestaurant } = get();
     
-    if (currentRestaurant) {
+    if (currentRestaurant && typeof window !== 'undefined') {
       const root = document.documentElement;
       root.style.setProperty('--restaurant-primary', currentRestaurant.theme.primaryColor);
       root.style.setProperty('--restaurant-secondary', currentRestaurant.theme.secondaryColor);
@@ -58,7 +51,3 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
   },
 }));
 
-// Aplica tema inicial ao carregar
-if (typeof window !== 'undefined') {
-  useRestaurantStore.getState().applyTheme();
-}

@@ -156,7 +156,7 @@ export const MenuManagement: React.FC = () => {
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="font-semibold line-clamp-1">{item.name}</h3>
                     <span className="font-semibold text-lg text-green-600">
-                      ${item.price.toFixed(2)}
+                      ${item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">
