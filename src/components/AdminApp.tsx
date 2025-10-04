@@ -28,9 +28,9 @@ export const AdminApp: React.FC = () => {
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{currentRestaurant.theme.logo}</span>
+            <span className="text-2xl">{currentRestaurant?.theme?.logo}</span>
             <div>
-              <h1 className="text-xl font-semibold">Admin {currentRestaurant.theme.name}</h1>
+              <h1 className="text-xl font-semibold">Admin {currentRestaurant?.theme?.name}</h1>
               <p className="text-sm text-muted-foreground">Painel de Gerenciamento do Restaurante</p>
             </div>
           </div>

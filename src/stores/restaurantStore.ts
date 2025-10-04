@@ -50,9 +50,9 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
     const { currentRestaurant } = get();
     if (currentRestaurant && typeof window !== 'undefined') {
       const root = document.documentElement;
-      root.style.setProperty('--restaurant-primary', currentRestaurant.theme.primaryColor);
-      root.style.setProperty('--restaurant-secondary', currentRestaurant.theme.secondaryColor);
-      root.style.setProperty('--restaurant-accent', currentRestaurant.theme.accentColor);
+      root.style.setProperty('--restaurant-primary', currentRestaurant?.theme?.primaryColor);
+      root.style.setProperty('--restaurant-secondary', currentRestaurant?.theme?.secondaryColor);
+      root.style.setProperty('--restaurant-accent', currentRestaurant?.theme?.accentColor);
     }
   },
 }));

@@ -1,8 +1,8 @@
 export const API_ENDPOINTS = {
-  restaurants: {
-    list: '/restaurants',
-    byId: (id: number) => `/restaurants/${id}`,
-    menu: (id: number) => `/restaurants/${id}/menu`,
+  product: {
+    list: '/product',
+    byId: (id: number) => `/product/${id}`,
+    menu: (id: number) => `/product/${id}/menu`,
   },
   orders: {
     create: '/orders',

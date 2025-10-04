@@ -57,15 +57,15 @@ export interface MenuCategory {
 }
 
 export interface MenuItem {
-  id: string;
-  categoryId: string;
+  id: number;
   name: string;
   description: string;
+  category: string;
   price: number;
-  image?: string;
   available: boolean;
-  preparationTime?: number; // em minutos
   modifiers?: MenuModifierGroup[];
+  image?: string;
+  preparationTime?: number; // em minutos
   tags?: string[];
   calories?: number;
   allergens?: string[];

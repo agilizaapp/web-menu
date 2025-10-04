@@ -45,7 +45,7 @@ export const SettingsPanel: React.FC = () => {
       ...currentRestaurant,
       name: formData.name,
       theme: {
-        ...currentRestaurant.theme,
+        ...currentRestaurant?.theme,
         name: formData.name,
         primaryColor: formData.primaryColor,
         secondaryColor: formData.secondaryColor,
@@ -53,7 +53,7 @@ export const SettingsPanel: React.FC = () => {
         logo: formData.logo
       },
       settings: {
-        ...currentRestaurant.settings,
+        ...currentRestaurant?.settings,
         hours: formData.hours,
         useCustomHours: formData.useCustomHours,
         customHours: formData.customHours,
