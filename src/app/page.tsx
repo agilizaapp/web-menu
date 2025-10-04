@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { AdminApp } from '@/components/AdminApp';
 import { CustomerApp } from '@/components/CustomerApp';
-import { useRestaurantStore } from '@/stores';
+import { useRestaurantStore } from '@/stores/restaurantStore';
 import { RestaurantsService } from '@/services/restaurant.service';
 import { toast } from 'sonner';
 import { mockRestaurants } from '@/data/mockData';
@@ -34,7 +34,9 @@ export default function Page() {
     }
   };
 
-  fetchRestaurant();
+  useEffect(() => {
+    fetchRestaurant();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
