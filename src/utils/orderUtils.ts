@@ -92,28 +92,23 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
   isValid: boolean;
   errors: string[];
 } {
-  console.log('🔍 Validando payload:', payload);
   const errors: string[] = [];
 
   // Validar customer
-  console.log('🔍 Validando phone:', payload.customer.phone, 'length:', payload.customer.phone?.length);
   if (!payload.customer.phone || payload.customer.phone.length < 12) {
     errors.push('Telefone inválido');
   }
 
-  console.log('🔍 Validando name:', payload.customer.name, 'length:', payload.customer.name?.trim().length);
   if (!payload.customer.name || payload.customer.name.trim().length < 3) {
     errors.push('Nome inválido');
   }
 
   // Validar order items
-  console.log('🔍 Validando items:', payload.order.items, 'length:', payload.order.items?.length);
   if (!payload.order.items || payload.order.items.length === 0) {
     errors.push('Carrinho vazio');
   }
 
   payload.order.items.forEach((item, index) => {
-    console.log(`🔍 Validando item ${index}:`, item);
     if (!item.product_id || item.product_id <= 0) {
       errors.push(`Item ${index + 1}: ID do produto inválido`);
     }
@@ -122,9 +117,6 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
       errors.push(`Item ${index + 1}: Quantidade inválida`);
     }
   });
-
-  console.log('🔍 Erros encontrados:', errors);
-  console.log('🔍 Validação:', errors.length === 0 ? '✅ OK' : '❌ FALHOU');
 
   return {
     isValid: errors.length === 0,

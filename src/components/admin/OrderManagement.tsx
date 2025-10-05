@@ -19,7 +19,6 @@ export const OrderManagement: React.FC = () => {
     const newOrders = orders.filter(order => order.status === 'pending');
     if (newOrders.length > 0 && soundEnabled) {
       // In a real app, this would play an actual sound
-      console.log('🔔 New order notification sound!');
     }
   }, [orders, soundEnabled]);
 
