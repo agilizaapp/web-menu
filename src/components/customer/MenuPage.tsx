@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { MenuItemCard } from './MenuItemCard';
 import { MenuItemModal } from './MenuItemModal';
-import { useCartStore, useRestaurantStore } from '@/stores';
-import { MenuItem, WeeklySchedule } from '@/types';
+import { useCartStore } from '@/stores/cartStore';
+import { useRestaurantStore } from '@/stores/restaurantStore';
+import { WeeklySchedule } from '@/types';
+import { MenuItem } from '@/types/entities.types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 

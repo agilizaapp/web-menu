@@ -6,7 +6,7 @@ export interface Restaurant {
   name: string;
   theme: RestaurantTheme;
   settings: RestaurantSettings;
-  menu: MenuItem[] | string[];
+  menu: MenuItem[];
 }
 
 export interface RestaurantTheme {

@@ -43,8 +43,7 @@ export interface IGetAllProductsApiResponse {
   store?: IStoreConfigs;
   categories?: MenuCategory[] | string[];
 }
-
-interface IStoreConfigs {
+export interface IStoreConfigs {
   name: string;
   type: string;
   configs: {

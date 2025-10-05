@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { MenuItem, CartItem } from '@/types';
+import { CartItem } from '@/types/index';
+import { MenuItem } from '@/types/entities.types';
 import { useCartStore } from '@/stores';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
