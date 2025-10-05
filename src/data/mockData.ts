@@ -99,6 +99,33 @@ const restaurant: {
           ]
         }
       ]
+    },
+    {
+      "id": 2,
+      "name": "Marmita da Casa (Pequena)",
+      "description": "Marmita da Casa seguindo o cardápio semanal. Peso: aprox. 340g",
+      "image": "https://images.unsplash.com/photo-1667207394004-acb6aaf4790e",
+      "category": "Marmitas",
+      "price": 20,
+      "available": true
+    },
+    {
+      "id": 3,
+      "name": "Marmita da Casa (Média)",
+      "description": "Marmita da Casa seguindo o cardápio semanal. Peso: aprox. 530g",
+      "image": "https://images.unsplash.com/photo-1667207394004-acb6aaf4790e",
+      "category": "Marmitas",
+      "price": 25,
+      "available": true
+    },
+    {
+      "id": 4,
+      "name": "Marmita da Casa (Grande)",
+      "description": "Marmita da Casa seguindo o cardápio semanal. Peso: aprox. 1,04kg",
+      "image": "https://images.unsplash.com/photo-1667207394004-acb6aaf4790e",
+      "category": "Marmitas",
+      "price": 30,
+      "available": true
     }
   ]
 };
