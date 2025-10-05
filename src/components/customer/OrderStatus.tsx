@@ -5,6 +5,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useOrderStore, useRestaurantStore } from '@/stores';
+import { AddressData } from '@/types';
+
+// Helper function to format address for display
+const formatAddress = (address: string | AddressData | undefined): string => {
+  if (!address) return 'Endereço não informado';
+  
+  if (typeof address === 'string') {
+    return address;
+  }
+  
+  // Format AddressData object
+  const parts = [
+    address.street,
+    address.number,
+    address.neighborhood,
+    address.postalCode
+  ].filter(Boolean);
+  
+  if (address.complement) {
+    parts.push(address.complement);
+  }
+  
+  return parts.join(', ') || 'Endereço não informado';
+};
 
 interface OrderStatusProps {
   orderId: string;
@@ -235,7 +259,7 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
               <div>
                 <span className="font-medium">
                   {order.deliveryType === 'delivery' ? 'Endereço de Entrega:' : 'Local de Retirada:'}
-                </span> {order.customerInfo.address}
+                </span> {formatAddress(order.customerInfo.address)}
               </div>
               <div>
                 <span className="font-medium">Horário do Pedido:</span> {new Date(order.createdAt).toLocaleString("pt-BR", { 

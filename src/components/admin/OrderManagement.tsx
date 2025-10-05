@@ -6,8 +6,31 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrderStore } from '@/stores';
-import { Order } from '@/types';
+import { Order, AddressData } from '@/types';
 import { toast } from 'sonner';
+
+// Helper function to format address for display
+const formatAddress = (address: string | AddressData | undefined): string => {
+  if (!address) return 'Endereço não informado';
+  
+  if (typeof address === 'string') {
+    return address;
+  }
+  
+  // Format AddressData object
+  const parts = [
+    address.street,
+    address.number,
+    address.neighborhood,
+    address.postalCode
+  ].filter(Boolean);
+  
+  if (address.complement) {
+    parts.push(address.complement);
+  }
+  
+  return parts.join(', ') || 'Endereço não informado';
+};
 
 export const OrderManagement: React.FC = () => {
   const { orders, updateOrderStatus } = useOrderStore();
@@ -142,7 +165,7 @@ export const OrderManagement: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-3 h-3" />
-                    <span className="truncate">{order.customerInfo.address}</span>
+                    <span className="truncate">{formatAddress(order.customerInfo.address)}</span>
                   </div>
                 </div>
 
