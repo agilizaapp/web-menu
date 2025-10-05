@@ -18,6 +18,7 @@ import { useCartStore, useRestaurantStore, useOrderStore } from "@/stores";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { createOrderPayload, validateOrderPayload } from "@/utils/orderUtils";
+import type { AddressData } from "@/types";
 
 interface CustomerData {
   phone: string;
@@ -27,7 +28,7 @@ interface CustomerData {
 
 interface CheckoutData {
   deliveryType: "delivery" | "pickup";
-  address: string;
+  address: AddressData | string;
   paymentMethod: "pix" | "card";
 }
 
@@ -76,13 +77,11 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   useEffect(() => {
     // Para cartão, criar pedido apenas ao clicar "Confirmar Pedido"
     if (checkoutData.paymentMethod === 'card') {
-      console.log('💳 Pagamento com cartão: pedido será criado ao confirmar');
       return;
     }
 
     // Evitar execução duplicada (protege contra React.StrictMode em dev)
     if (orderCreationAttempted.current) {
-      console.log('⚠️ Pedido já foi criado, ignorando...');
       return;
     }
 
@@ -93,7 +92,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       setIsLoadingOrder(true);
       
       try {
-        console.log('🔵 Criando pedido PIX na API...');
         
         // Criar payload da API
         const apiPayload = createOrderPayload(customerData, checkoutData, cart);
@@ -101,17 +99,14 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         // Validar payload
         const validation = validateOrderPayload(apiPayload);
         if (!validation.isValid) {
-          console.log('❌ Validação falhou:', validation.errors);
           toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
           setIsLoadingOrder(false);
           return;
         }
 
-        console.log('📤 Enviando pedido:', JSON.stringify(apiPayload, null, 2));
 
         // Enviar para API
         const response = await apiService.createOrder(apiPayload);
-        console.log('📥 Resposta da API:', response);
 
         if (!response.success) {
           throw new Error(response.error?.message || 'Erro ao criar pedido');
@@ -132,7 +127,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         // Se for PIX, atualizar o código
         if (checkoutData.paymentMethod === 'pix' && pixCodeFromAPI) {
           setPixCode(pixCodeFromAPI);
-          console.log('✅ Código PIX recebido da API');
         }
 
         // Marcar como criado
@@ -140,7 +134,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         
         toast.success("✅ Código PIX gerado!");
       } catch (error) {
-        console.error('❌ Erro ao criar pedido:', error);
         
         const errorMessage = error instanceof Error 
           ? error.message 
@@ -191,10 +184,8 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   };
 
   const handleConfirmPayment = async () => {
-    console.log('🔵 Confirmando pagamento...');
     
     if (isSubmitting) {
-      console.log('⚠️ Já está processando, ignorando...');
       return;
     }
 
@@ -205,7 +196,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
 
       // Se for CARTÃO, criar o pedido agora
       if (checkoutData.paymentMethod === 'card' && !orderData) {
-        console.log('💳 Criando pedido com cartão na API...');
         
         // Criar payload da API
         const apiPayload = createOrderPayload(customerData, checkoutData, cart);
@@ -213,17 +203,13 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         // Validar payload
         const validation = validateOrderPayload(apiPayload);
         if (!validation.isValid) {
-          console.log('❌ Validação falhou:', validation.errors);
           toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
           setIsSubmitting(false);
           return;
         }
 
-        console.log('📤 Enviando pedido com cartão:', JSON.stringify(apiPayload, null, 2));
-
         // Enviar para API
         const response = await apiService.createOrder(apiPayload);
-        console.log('📥 Resposta da API (cartão):', response);
 
         if (!response.success) {
           throw new Error(response.error?.message || 'Erro ao criar pedido');

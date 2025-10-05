@@ -1,11 +1,19 @@
 // API Base URL - configurar no .env
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+export interface AddressData {
+  street: string;
+  number: string;
+  neighborhood: string;
+  postalCode: string;
+  complement?: string;
+}
+
 interface CustomerData {
   phone: string;
   name: string;
   birthdate?: string;
-  address?: string;
+  address?: AddressData;
 }
 
 interface OrderModifier {
@@ -50,9 +58,6 @@ export const apiService = {
   async createOrder(payload: CreateOrderPayload): Promise<CreateOrderResponse> {
     try {
       const url = `${API_BASE_URL}/order`;
-      console.log('🌐 API_BASE_URL:', API_BASE_URL);
-      console.log('🔗 Request URL:', url);
-      console.log('📦 Payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(url, {
         method: 'POST',
@@ -62,9 +67,6 @@ export const apiService = {
         body: JSON.stringify(payload),
       });
 
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response ok:', response.ok);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('❌ Error response:', errorData);
@@ -72,12 +74,10 @@ export const apiService = {
       }
 
       const data = await response.json();
-      console.log('✅ Response data:', data);
       
       // Se a API retornar direto sem wrapper {success: true, data: {...}}
       // Normalizar para o formato esperado
       if (!data.success && data.orderId) {
-        console.log('⚠️ API retornou sem wrapper, normalizando...');
         return {
           success: true,
           data: data

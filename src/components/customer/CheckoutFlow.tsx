@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { RegisterModals } from "./RegisterModals";
 import { CheckoutPage } from "./CheckoutPage";
 import { PaymentFlow } from "./PaymentFlow";
+import { AddressData } from "@/types";
 
 interface CheckoutFlowProps {
   onOrderComplete: (orderId: string) => void;
@@ -16,7 +17,7 @@ interface CustomerData {
 
 interface CheckoutData {
   deliveryType: "delivery" | "pickup";
-  address: string;
+  address: string | AddressData;
   paymentMethod: "pix" | "card";
 }
 

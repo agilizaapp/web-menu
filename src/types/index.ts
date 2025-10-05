@@ -32,6 +32,14 @@ export interface CartItem {
   totalPrice: number;
 }
 
+export interface AddressData {
+  street: string;
+  number: string;
+  neighborhood: string;
+  postalCode: string;
+  complement?: string;
+}
+
 export interface Order {
   id: string;
   apiOrderId?: number; // ID retornado pela API
@@ -40,7 +48,7 @@ export interface Order {
   customerInfo: {
     name: string;
     phone: string;
-    address: string;
+    address: string | AddressData;
   };
   deliveryType: 'delivery' | 'pickup';
   status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivered' | 'rejected';
