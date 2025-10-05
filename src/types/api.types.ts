@@ -1,3 +1,5 @@
+import { MenuCategory, MenuItem } from './entities.types';
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -6,13 +8,17 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
+  success: boolean;
   data: T[];
   pagination: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
+  timestamp: string;
 }
 
 export interface ApiErrorResponse {
@@ -20,7 +26,71 @@ export interface ApiErrorResponse {
   error: {
     message: string;
     code: string;
-    details?: any;
+    details?: Record<string, any>;
   };
   timestamp: string;
+}
+
+// ==================== API RESTAURANT RESPONSES ====================
+
+export interface IGetProductByIdStoreApiResponse {
+  product: MenuItem;
+  store?: IStoreConfigs;
+}
+
+export interface IGetAllProductsApiResponse {
+  products: MenuItem[];
+  store?: IStoreConfigs;
+  categories?: MenuCategory[] | string[];
+}
+
+interface IStoreConfigs {
+  name: string;
+  type: string;
+  configs: {
+    theme: {
+      logo: string;
+      primaryColor: string;
+      secondaryColor: string;
+      accentColor: string;
+    };
+    settings: {
+      hours: string;
+      useCustomHours: boolean;
+      customHours: {
+        monday: DayScheduleApi;
+        tuesday: DayScheduleApi;
+        wednesday: DayScheduleApi;
+        thursday: DayScheduleApi;
+        friday: DayScheduleApi;
+        saturday: DayScheduleApi;
+        sunday: DayScheduleApi;
+      };
+      deliveryFee: number;
+      deliveryZones: string[];
+      pixKey: string;
+    };
+  };
+};
+
+export interface DayScheduleApi {
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
+// Query params comuns
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface SortParams {
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface FilterParams {
+  search?: string;
+  [key: string]: any;
 }

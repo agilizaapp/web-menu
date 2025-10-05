@@ -1,7 +1,7 @@
 export const API_ENDPOINTS = {
   product: {
-    list: '/product',
-    byId: (id: number) => `/product/${id}`,
+    list: (config?: boolean) => `/product${config ? '?config=true' : ''}`,
+    byId: (id: number, config?: boolean) => `/product/${id}${config ? '?config=true' : ''}`,
     menu: (id: number) => `/product/${id}/menu`,
   },
   orders: {

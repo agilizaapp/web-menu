@@ -26,11 +26,11 @@ export const SettingsPanel: React.FC = () => {
   const { currentRestaurant, setCurrentRestaurant } = useRestaurantStore();
   const [formData, setFormData] = useState({
     name: currentRestaurant?.name || '',
-    hours: currentRestaurant?.settings.hours || '',
-    useCustomHours: currentRestaurant?.settings.useCustomHours || false,
-    customHours: currentRestaurant?.settings.customHours || defaultSchedule,
-    deliveryFee: currentRestaurant?.settings.deliveryFee || 0,
-    pixKey: currentRestaurant?.settings.pixKey || '',
+    hours: currentRestaurant?.settings?.hours || '',
+    useCustomHours: currentRestaurant?.settings?.useCustomHours || false,
+    customHours: currentRestaurant?.settings?.customHours || defaultSchedule,
+    deliveryFee: currentRestaurant?.settings?.deliveryFee || 0,
+    pixKey: currentRestaurant?.settings?.pixKey || '',
     primaryColor: currentRestaurant?.theme.primaryColor || '#DC2626',
     secondaryColor: currentRestaurant?.theme.secondaryColor || '#FEF2F2',
     accentColor: currentRestaurant?.theme.accentColor || '#FBBF24',
