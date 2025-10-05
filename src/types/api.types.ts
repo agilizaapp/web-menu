@@ -26,7 +26,7 @@ export interface ApiErrorResponse {
   error: {
     message: string;
     code: string;
-    details?: Record<string, any>;
+    details?: Record<string, string | boolean | number | undefined>;
   };
   timestamp: string;
 }
@@ -91,5 +91,5 @@ export interface SortParams {
 
 export interface FilterParams {
   search?: string;
-  [key: string]: any;
+  [key: string]: string | boolean | number | undefined;
 }

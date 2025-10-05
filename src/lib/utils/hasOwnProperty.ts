@@ -1,3 +1,3 @@
-export const hasOwnProperty = (obj: any, key: string): boolean => {
-  return obj?.hasOwnProperty('key');
+export const hasOwnProperty = (obj: object, key: string): boolean => {
+  return obj?.hasOwnProperty(key);
 }

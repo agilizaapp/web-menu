@@ -21,12 +21,16 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       <div className="flex items-center justify-center w-full h-full">
          <Image
           src={ERROR_IMG_SRC}
-          alt="Error loading image"
+          alt="Erro de imagem: imagem indisponível"
           placeholder="blur"
           blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlZWUiLz48L3N2Zz4="
           {...rest}
           priority={false}
           data-original-url={src}
+          width={88}
+          height={88}
+          className="opacity-30"
+          loading="lazy"
         />
       </div>
     </div>
@@ -36,13 +40,15 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       alt={alt}
       width={357}
       height={268}
+      quality={85}
+      priority={false}
+      loading="lazy"
       placeholder="blur"
       blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlZWUiLz48L3N2Zz4="
       className={`w-full aspect-[510/382] ${className}`}
       style={style}
       {...rest}
       onError={handleError}
-      priority={false}
     />
   )
 }
