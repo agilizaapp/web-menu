@@ -34,6 +34,8 @@ export interface CartItem {
 
 export interface Order {
   id: string;
+  apiOrderId?: number; // ID retornado pela API
+  apiToken?: string; // Token de autenticação da API
   items: CartItem[];
   customerInfo: {
     name: string;
@@ -46,4 +48,5 @@ export interface Order {
   createdAt: Date | string; // Can be string when deserialized from localStorage
   paymentMethod: 'pix' | 'card';
   paymentStatus: 'pending' | 'completed' | 'failed';
+  pixCode?: string; // Código PIX retornado pela API
 }

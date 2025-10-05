@@ -29,8 +29,12 @@ interface CreateOrderPayload {
 interface CreateOrderResponse {
   success: boolean;
   data: {
-    orderId: string;
-    status: string;
+    orderId: number;
+    token: string;
+    pix?: {
+      copyAndPaste: string;
+    };
+    status?: string;
     message?: string;
   };
   error?: {
@@ -45,7 +49,12 @@ export const apiService = {
    */
   async createOrder(payload: CreateOrderPayload): Promise<CreateOrderResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/order`, {
+      const url = `${API_BASE_URL}/order`;
+      console.log('🌐 API_BASE_URL:', API_BASE_URL);
+      console.log('🔗 Request URL:', url);
+      console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,15 +62,31 @@ export const apiService = {
         body: JSON.stringify(payload),
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Error response:', errorData);
         throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('✅ Response data:', data);
+      
+      // Se a API retornar direto sem wrapper {success: true, data: {...}}
+      // Normalizar para o formato esperado
+      if (!data.success && data.orderId) {
+        console.log('⚠️ API retornou sem wrapper, normalizando...');
+        return {
+          success: true,
+          data: data
+        };
+      }
+      
       return data;
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('💥 Error creating order:', error);
       throw error;
     }
   },

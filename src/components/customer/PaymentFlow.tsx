@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -48,14 +48,22 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   const { currentRestaurant } = useRestaurantStore();
   const { addOrder } = useOrderStore();
 
+  // useRef para garantir execução única (protege contra React.StrictMode)
+  const orderCreationAttempted = useRef(false);
+
   const [paymentStep, setPaymentStep] = useState<"waiting" | "processing">("waiting");
-  const [pixCode, setPixCode] = useState(
-    "00020126360014BR.GOV.BCB.PIX0114+55119999999990208Pedido015204000053039865802BR5923Restaurant Name6009Sao Paulo62070503***63041234"
-  );
+  const [pixCode, setPixCode] = useState("");
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutos
   const [showQrCode, setShowQrCode] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [orderCreated, setOrderCreated] = useState(false); // Flag para evitar duplicação
+  const [orderData, setOrderData] = useState<{
+    orderId: string;
+    apiOrderId: number;
+    apiToken: string;
+  } | null>(null);
 
   const cartTotal = getTotalCartPrice();
   const deliveryFee =
@@ -64,9 +72,93 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       : 0;
   const finalTotal = cartTotal + deliveryFee;
 
+  // Criar pedido na API quando o componente montar (APENAS PARA PIX)
+  useEffect(() => {
+    // Para cartão, criar pedido apenas ao clicar "Confirmar Pedido"
+    if (checkoutData.paymentMethod === 'card') {
+      console.log('💳 Pagamento com cartão: pedido será criado ao confirmar');
+      return;
+    }
+
+    // Evitar execução duplicada (protege contra React.StrictMode em dev)
+    if (orderCreationAttempted.current) {
+      console.log('⚠️ Pedido já foi criado, ignorando...');
+      return;
+    }
+
+    // Marcar como iniciado ANTES de fazer a requisição
+    orderCreationAttempted.current = true;
+
+    const createOrder = async () => {
+      setIsLoadingOrder(true);
+      
+      try {
+        console.log('🔵 Criando pedido PIX na API...');
+        
+        // Criar payload da API
+        const apiPayload = createOrderPayload(customerData, checkoutData, cart);
+
+        // Validar payload
+        const validation = validateOrderPayload(apiPayload);
+        if (!validation.isValid) {
+          console.log('❌ Validação falhou:', validation.errors);
+          toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
+          setIsLoadingOrder(false);
+          return;
+        }
+
+        console.log('📤 Enviando pedido:', JSON.stringify(apiPayload, null, 2));
+
+        // Enviar para API
+        const response = await apiService.createOrder(apiPayload);
+        console.log('📥 Resposta da API:', response);
+
+        if (!response.success) {
+          throw new Error(response.error?.message || 'Erro ao criar pedido');
+        }
+
+        // Salvar dados do pedido
+        const apiOrderId = response.data.orderId;
+        const orderId = `order-${apiOrderId}`;
+        const apiToken = response.data.token;
+        const pixCodeFromAPI = response.data.pix?.copyAndPaste;
+
+        setOrderData({
+          orderId,
+          apiOrderId,
+          apiToken,
+        });
+
+        // Se for PIX, atualizar o código
+        if (checkoutData.paymentMethod === 'pix' && pixCodeFromAPI) {
+          setPixCode(pixCodeFromAPI);
+          console.log('✅ Código PIX recebido da API');
+        }
+
+        // Marcar como criado
+        setOrderCreated(true);
+        
+        toast.success("✅ Código PIX gerado!");
+      } catch (error) {
+        console.error('❌ Erro ao criar pedido:', error);
+        
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : 'Erro desconhecido ao processar pedido';
+        
+        toast.error(`❌ Falha ao criar pedido: ${errorMessage}`);
+      } finally {
+        setIsLoadingOrder(false);
+      }
+    };
+
+    createOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Executar apenas uma vez ao montar o componente
+
   // Timer do PIX
   useEffect(() => {
-    if (checkoutData.paymentMethod === "pix" && timeLeft > 0 && !isExpired) {
+    if (checkoutData.paymentMethod === "pix" && pixCode && timeLeft > 0 && !isExpired) {
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -79,7 +171,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [checkoutData.paymentMethod, timeLeft, isExpired]);
+  }, [checkoutData.paymentMethod, pixCode, timeLeft, isExpired]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -99,38 +191,70 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   };
 
   const handleConfirmPayment = async () => {
-    if (isSubmitting) return;
+    console.log('🔵 Confirmando pagamento...');
+    
+    if (isSubmitting) {
+      console.log('⚠️ Já está processando, ignorando...');
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
-      // Criar payload da API
-      const apiPayload = createOrderPayload(customerData, checkoutData, cart);
+      let finalOrderData = orderData;
 
-      // Validar payload
-      const validation = validateOrderPayload(apiPayload);
-      if (!validation.isValid) {
-        toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
+      // Se for CARTÃO, criar o pedido agora
+      if (checkoutData.paymentMethod === 'card' && !orderData) {
+        console.log('💳 Criando pedido com cartão na API...');
+        
+        // Criar payload da API
+        const apiPayload = createOrderPayload(customerData, checkoutData, cart);
+
+        // Validar payload
+        const validation = validateOrderPayload(apiPayload);
+        if (!validation.isValid) {
+          console.log('❌ Validação falhou:', validation.errors);
+          toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        console.log('📤 Enviando pedido com cartão:', JSON.stringify(apiPayload, null, 2));
+
+        // Enviar para API
+        const response = await apiService.createOrder(apiPayload);
+        console.log('📥 Resposta da API (cartão):', response);
+
+        if (!response.success) {
+          throw new Error(response.error?.message || 'Erro ao criar pedido');
+        }
+
+        // Salvar dados do pedido
+        const apiOrderId = response.data.orderId;
+        const orderId = `order-${apiOrderId}`;
+        const apiToken = response.data.token;
+
+        finalOrderData = {
+          orderId,
+          apiOrderId,
+          apiToken,
+        };
+
+        setOrderData(finalOrderData);
+      }
+
+      // Verificar se temos os dados do pedido
+      if (!finalOrderData) {
+        toast.error('❌ Erro: Dados do pedido não encontrados');
         setIsSubmitting(false);
         return;
       }
 
-      // Log do payload para debug (remover em produção)
-      console.log('📤 Enviando pedido:', JSON.stringify(apiPayload, null, 2));
-
-      // Enviar para API
-      const response = await apiService.createOrder(apiPayload);
-
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Erro ao criar pedido');
-      }
-
-      // Usar o orderId retornado pela API ou gerar um local
-      const orderId = response.data.orderId || `order-${Date.now()}`;
-
       // Criar pedido local para o store
       const localOrder = {
-        id: orderId,
+        id: finalOrderData.orderId,
+        apiOrderId: finalOrderData.apiOrderId,
+        apiToken: finalOrderData.apiToken,
         items: cart,
         customerInfo: {
           name: customerData.name,
@@ -143,6 +267,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         createdAt: new Date(),
         paymentMethod: checkoutData.paymentMethod,
         paymentStatus: "pending" as const,
+        pixCode: pixCode || undefined,
       };
 
       // Salvar no store local
@@ -152,45 +277,17 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       clearCart();
       
       // Navegar para página de status
-      onOrderComplete(orderId);
+      onOrderComplete(finalOrderData.orderId);
       
-      toast.success("✅ Pedido realizado com sucesso!");
+      toast.success("✅ Pedido confirmado!");
     } catch (error) {
-      console.error('❌ Erro ao criar pedido:', error);
+      console.error('❌ Erro ao confirmar pedido:', error);
       
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Erro desconhecido ao processar pedido';
       
-      toast.error(`❌ Falha ao criar pedido: ${errorMessage}`);
-      
-      // Em caso de erro, você pode optar por:
-      // 1. Salvar pedido localmente mesmo assim (modo offline)
-      // 2. Manter o usuário na tela de pagamento para tentar novamente
-      // Para este exemplo, vamos salvar localmente:
-      
-      const fallbackOrderId = `order-local-${Date.now()}`;
-      const localOrder = {
-        id: fallbackOrderId,
-        items: cart,
-        customerInfo: {
-          name: customerData.name,
-          phone: customerData.phone,
-          address: checkoutData.address,
-        },
-        deliveryType: checkoutData.deliveryType,
-        status: "pending" as const,
-        totalAmount: finalTotal,
-        createdAt: new Date(),
-        paymentMethod: checkoutData.paymentMethod,
-        paymentStatus: "pending" as const,
-      };
-      
-      addOrder(localOrder);
-      clearCart();
-      onOrderComplete(fallbackOrderId);
-      
-      toast.info("ℹ️ Pedido salvo localmente. O restaurante será notificado assim que possível.");
+      toast.error(`❌ Falha ao confirmar pedido: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -240,13 +337,24 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Valor Total */}
-              <div className="text-center p-6 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
-                <p className="text-3xl font-bold">
-                  R$ {finalTotal.toFixed(2)}
-                </p>
-              </div>
+              {/* Loading state */}
+              {isLoadingOrder && (
+                <div className="text-center py-12 space-y-4">
+                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <p className="text-muted-foreground">Gerando código PIX...</p>
+                </div>
+              )}
+
+              {/* Código PIX gerado */}
+              {!isLoadingOrder && pixCode && (
+                <>
+                  {/* Valor Total */}
+                  <div className="text-center p-6 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
+                    <p className="text-3xl font-bold">
+                      R$ {finalTotal.toFixed(2)}
+                    </p>
+                  </div>
 
               {/* QR Code */}
               {!isExpired && (
@@ -347,6 +455,26 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
                   >
                     <RefreshCw className="w-4 h-4" />
                     Gerar Novo Código
+                  </Button>
+                </div>
+              )}
+              </>
+              )}
+
+              {/* Erro ao gerar PIX */}
+              {!isLoadingOrder && !pixCode && (
+                <div className="text-center space-y-4 py-6">
+                  <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
+                  <p className="text-muted-foreground">
+                    Erro ao gerar código PIX. Por favor, tente novamente.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={onBack}
+                    className="gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Voltar
                   </Button>
                 </div>
               )}
