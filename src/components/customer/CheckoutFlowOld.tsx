@@ -237,6 +237,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         id: `order-${Date.now()}`,
         items: cart,
         customerInfo,
+        deliveryType: "delivery", // Default para compatibilidade
         status: "pending",
         totalAmount: finalTotal,
         createdAt: new Date(),

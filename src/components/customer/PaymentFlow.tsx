@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore, useRestaurantStore, useOrderStore } from "@/stores";
 import { toast } from "sonner";
+import { apiService } from "@/services/api";
+import { createOrderPayload, validateOrderPayload } from "@/utils/orderUtils";
 
 interface CustomerData {
   phone: string;
@@ -53,6 +55,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutos
   const [showQrCode, setShowQrCode] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cartTotal = getTotalCartPrice();
   const deliveryFee =
@@ -95,29 +98,102 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     toast.success("✅ Novo código PIX gerado!");
   };
 
-  const handleConfirmPayment = () => {
-    const orderId = `order-${Date.now()}`;
+  const handleConfirmPayment = async () => {
+    if (isSubmitting) return;
 
-    const order = {
-      id: orderId,
-      items: cart,
-      customerInfo: {
-        name: customerData.name,
-        phone: customerData.phone,
-        address: checkoutData.address,
-      },
-      deliveryType: checkoutData.deliveryType,
-      status: "pending" as const,
-      totalAmount: finalTotal,
-      createdAt: new Date(),
-      paymentMethod: checkoutData.paymentMethod,
-      paymentStatus: "pending" as const,
-    };
+    setIsSubmitting(true);
 
-    addOrder(order);
-    clearCart();
-    onOrderComplete(orderId);
-    toast.success("✅ Pedido realizado com sucesso!");
+    try {
+      // Criar payload da API
+      const apiPayload = createOrderPayload(customerData, checkoutData, cart);
+
+      // Validar payload
+      const validation = validateOrderPayload(apiPayload);
+      if (!validation.isValid) {
+        toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Log do payload para debug (remover em produção)
+      console.log('📤 Enviando pedido:', JSON.stringify(apiPayload, null, 2));
+
+      // Enviar para API
+      const response = await apiService.createOrder(apiPayload);
+
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Erro ao criar pedido');
+      }
+
+      // Usar o orderId retornado pela API ou gerar um local
+      const orderId = response.data.orderId || `order-${Date.now()}`;
+
+      // Criar pedido local para o store
+      const localOrder = {
+        id: orderId,
+        items: cart,
+        customerInfo: {
+          name: customerData.name,
+          phone: customerData.phone,
+          address: checkoutData.address,
+        },
+        deliveryType: checkoutData.deliveryType,
+        status: "pending" as const,
+        totalAmount: finalTotal,
+        createdAt: new Date(),
+        paymentMethod: checkoutData.paymentMethod,
+        paymentStatus: "pending" as const,
+      };
+
+      // Salvar no store local
+      addOrder(localOrder);
+      
+      // Limpar carrinho
+      clearCart();
+      
+      // Navegar para página de status
+      onOrderComplete(orderId);
+      
+      toast.success("✅ Pedido realizado com sucesso!");
+    } catch (error) {
+      console.error('❌ Erro ao criar pedido:', error);
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Erro desconhecido ao processar pedido';
+      
+      toast.error(`❌ Falha ao criar pedido: ${errorMessage}`);
+      
+      // Em caso de erro, você pode optar por:
+      // 1. Salvar pedido localmente mesmo assim (modo offline)
+      // 2. Manter o usuário na tela de pagamento para tentar novamente
+      // Para este exemplo, vamos salvar localmente:
+      
+      const fallbackOrderId = `order-local-${Date.now()}`;
+      const localOrder = {
+        id: fallbackOrderId,
+        items: cart,
+        customerInfo: {
+          name: customerData.name,
+          phone: customerData.phone,
+          address: checkoutData.address,
+        },
+        deliveryType: checkoutData.deliveryType,
+        status: "pending" as const,
+        totalAmount: finalTotal,
+        createdAt: new Date(),
+        paymentMethod: checkoutData.paymentMethod,
+        paymentStatus: "pending" as const,
+      };
+      
+      addOrder(localOrder);
+      clearCart();
+      onOrderComplete(fallbackOrderId);
+      
+      toast.info("ℹ️ Pedido salvo localmente. O restaurante será notificado assim que possível.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Pagamento PIX
@@ -249,9 +325,10 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
                     className="w-full"
                     size="lg"
                     onClick={handleConfirmPayment}
+                    disabled={isSubmitting}
                     style={{ backgroundColor: "var(--restaurant-primary)" }}
                   >
-                    Já Realizei o Pagamento
+                    {isSubmitting ? "Processando..." : "Já Realizei o Pagamento"}
                   </Button>
                 </>
               )}
@@ -345,9 +422,10 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
               className="w-full"
               size="lg"
               onClick={handleConfirmPayment}
+              disabled={isSubmitting}
               style={{ backgroundColor: "var(--restaurant-primary)" }}
             >
-              Confirmar Pedido
+              {isSubmitting ? "Processando..." : "Confirmar Pedido"}
             </Button>
           </CardContent>
         </Card>
