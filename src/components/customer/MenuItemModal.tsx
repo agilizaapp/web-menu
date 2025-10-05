@@ -111,7 +111,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
             </Button>
           </div>
 
-          <div className="p-6">
+          <div className="p-2 sm:p-6">
             {/* Header */}
             <div className="mb-4">
               <div className="flex justify-between items-start mb-2">
@@ -181,7 +181,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
 
             {/* Quantity and Add to Cart */}
             <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center sm:gap-2">
                 <Button
                   variant="outline"
                   size="icon"
@@ -203,10 +203,10 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
               <Button
                 onClick={handleAddToCart}
                 disabled={!canAddToCart()}
-                className="px-6"
+                className="px-4"
                 style={{ backgroundColor: 'var(--restaurant-primary)' }}
               >
-                Add to Cart - ${(totalPrice * quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Adicionar ao carrinho - R$ {(totalPrice * quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </Button>
             </div>
           </div>
