@@ -109,7 +109,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
         style={{ backgroundColor: 'var(--restaurant-primary)', color: 'white' }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="w-full flex flex-col items-start mb-4">
             {/* <img className="text-3xl max-h-20" width="150" height="80" src={currentRestaurant?.theme?.logo} alt={`Logo do Restaurante ${currentRestaurant?.theme?.name}`} /> */}
             <Image
               src={currentRestaurant?.theme?.logo}
@@ -121,7 +121,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
               className="relative w-[150px] h-[80px] object-contain"
               priority
             />
-            <div className="flex-1">
+            <div className="w-full flex-1">
               <h1 className="text-xl font-semibold">{currentRestaurant?.theme?.name}</h1>
               
               {/* Hours Display */}
