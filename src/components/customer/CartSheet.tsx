@@ -47,7 +47,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          className="fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg"
+          className="px-2 fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg"
           style={{ backgroundColor: 'var(--restaurant-primary)' }}
         >
           <ShoppingBag className="w-8 h-8" />
@@ -60,14 +60,14 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="px-2 w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5" />
-            Your Cart ({cartCount} items)
+            Seu Carrinho ({cartCount} {cartCount === 1 ? 'item' : 'itens'})
           </SheetTitle>
           <SheetDescription>
-            Review your order items and proceed to checkout
+            Revise os itens do seu pedido e prossiga para o checkout
           </SheetDescription>
         </SheetHeader>
 
@@ -87,7 +87,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium truncate">{item.menuItem.name}</h4>
                   <p className="text-sm text-muted-foreground">
-                    ${item.totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
+                    R$ {item.totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} cada
                   </p>
 
                   {/* Selected Modifiers */}
@@ -144,7 +144,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
 
                 <div className="text-right">
                   <p className="font-medium">
-                    ${(item.totalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    R$ {(item.totalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
@@ -155,36 +155,36 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
           <div className="border-t pt-4 mt-4 space-y-3">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>${cartTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>R$ {cartTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Delivery Fee</span>
-              <span>${deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>Taxa de Entrega</span>
+              <span>R$ {deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Tax</span>
-              <span>${tax.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>Taxas</span>
+              <span>R$ {tax.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-semibold">
               <span>Total</span>
-              <span>${finalTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>R$ {finalTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 py-2">
               <Button 
                 variant="outline" 
                 className="flex-1"
                 onClick={clearCart}
               >
-                Clear Cart
+                Limpar Carrinho
               </Button>
               <Button 
                 className="flex-1"
                 style={{ backgroundColor: 'var(--restaurant-primary)' }}
                 onClick={handleCheckout}
               >
-                Checkout
+                Finalizar Pedido
               </Button>
             </div>
           </div>
