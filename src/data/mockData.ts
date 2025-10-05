@@ -344,6 +344,7 @@ export const mockOrders: Order[] = [
       phone: '(11) 98765-4321',
       address: 'Rua das Flores, 123 - Centro'
     },
+    deliveryType: 'delivery',
     status: 'pending',
     totalAmount: 31.99,
     createdAt: new Date(),

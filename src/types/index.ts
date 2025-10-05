@@ -40,9 +40,10 @@ export interface Order {
     phone: string;
     address: string;
   };
+  deliveryType: 'delivery' | 'pickup';
   status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivered' | 'rejected';
   totalAmount: number;
   createdAt: Date | string; // Can be string when deserialized from localStorage
-  paymentMethod: 'pix';
+  paymentMethod: 'pix' | 'card';
   paymentStatus: 'pending' | 'completed' | 'failed';
 }

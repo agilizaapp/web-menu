@@ -34,8 +34,16 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
     { key: 'pending', label: 'Pedido Recebido', icon: CheckCircle },
     { key: 'accepted', label: 'Pedido Confirmado', icon: CheckCircle },
     { key: 'preparing', label: 'Na Cozinha', icon: ChefHat },
-    { key: 'ready', label: 'Pronto para Retirada', icon: Clock },
-    { key: 'delivered', label: 'Entregue', icon: Truck }
+    { 
+      key: 'ready', 
+      label: order.deliveryType === 'delivery' ? 'Saiu para Entrega' : 'Pronto para Retirada', 
+      icon: order.deliveryType === 'delivery' ? Truck : Clock 
+    },
+    { 
+      key: 'delivered', 
+      label: order.deliveryType === 'delivery' ? 'Entregue' : 'Retirado', 
+      icon: CheckCircle 
+    }
   ];
 
   const getCurrentStepIndex = () => {
@@ -88,8 +96,8 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
                 {order.status === 'pending' ? 'Pedido Recebido' :
                  order.status === 'accepted' ? 'Pedido Confirmado' :
                  order.status === 'preparing' ? 'Na Cozinha' :
-                 order.status === 'ready' ? 'Pronto para Retirada' :
-                 order.status === 'delivered' ? 'Entregue' :
+                 order.status === 'ready' ? (order.deliveryType === 'delivery' ? 'Saiu para Entrega' : 'Pronto para Retirada') :
+                 order.status === 'delivered' ? (order.deliveryType === 'delivery' ? 'Entregue' : 'Retirado') :
                  order.status === 'rejected' ? 'Pedido Cancelado' :
                  order.status}
               </span>
@@ -105,11 +113,17 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
             {order.status === 'preparing' && (
               <p>Nossos chefs estão preparando sua deliciosa refeição!</p>
             )}
-            {order.status === 'ready' && (
-              <p>Seu pedido está pronto para retirada ou será entregue em breve.</p>
+            {order.status === 'ready' && order.deliveryType === 'delivery' && (
+              <p>Seu pedido saiu para entrega e chegará em breve!</p>
             )}
-            {order.status === 'delivered' && (
+            {order.status === 'ready' && order.deliveryType === 'pickup' && (
+              <p>Seu pedido está pronto! Você pode vir buscar a qualquer momento.</p>
+            )}
+            {order.status === 'delivered' && order.deliveryType === 'delivery' && (
               <p>Seu pedido foi entregue. Bom apetite!</p>
+            )}
+            {order.status === 'delivered' && order.deliveryType === 'pickup' && (
+              <p>Pedido retirado. Bom apetite!</p>
             )}
             {order.status === 'rejected' && (
               <p>Desculpe, tivemos que cancelar seu pedido. Você será reembolsado em breve.</p>
@@ -176,16 +190,14 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>R$ {(order.totalAmount - (currentRestaurant.settings.deliveryFee + order.totalAmount * 0.1)).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>R$ {order.items.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Taxa de Entrega</span>
-                <span>R$ {currentRestaurant.settings.deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Taxas</span>
-                <span>R$ {(order.totalAmount * 0.1).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
+              {order.deliveryType === 'delivery' && (
+                <div className="flex justify-between">
+                  <span>Taxa de Entrega</span>
+                  <span>R$ {currentRestaurant.settings.deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
             </div>
             <Separator className="my-2" />
             <div className="flex justify-between font-semibold">
@@ -195,10 +207,22 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
           </CardContent>
         </Card>
 
-        {/* Delivery Info */}
+        {/* Delivery/Pickup Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Informações de Entrega</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {order.deliveryType === 'delivery' ? (
+                <>
+                  <Truck className="w-5 h-5" />
+                  Informações de Entrega
+                </>
+              ) : (
+                <>
+                  <Clock className="w-5 h-5" />
+                  Informações de Retirada
+                </>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -209,10 +233,21 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
                 <span className="font-medium">Telefone:</span> {order.customerInfo.phone}
               </div>
               <div>
-                <span className="font-medium">Endereço:</span> {order.customerInfo.address}
+                <span className="font-medium">
+                  {order.deliveryType === 'delivery' ? 'Endereço de Entrega:' : 'Local de Retirada:'}
+                </span> {order.customerInfo.address}
               </div>
               <div>
-                <span className="font-medium">Horário do Pedido:</span> {new Date(order.createdAt).toLocaleTimeString()}
+                <span className="font-medium">Horário do Pedido:</span> {new Date(order.createdAt).toLocaleString("pt-BR", { 
+                  day: '2-digit',
+                  month: '2-digit', 
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </div>
+              <div>
+                <span className="font-medium">Método de Pagamento:</span> {order.paymentMethod === 'pix' ? 'PIX' : 'Cartão'}
               </div>
             </div>
           </CardContent>
