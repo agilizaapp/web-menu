@@ -34,15 +34,19 @@ export interface CartItem {
 
 export interface Order {
   id: string;
+  apiOrderId?: number; // ID retornado pela API
+  apiToken?: string; // Token de autenticação da API
   items: CartItem[];
   customerInfo: {
     name: string;
     phone: string;
     address: string;
   };
+  deliveryType: 'delivery' | 'pickup';
   status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivered' | 'rejected';
   totalAmount: number;
   createdAt: Date | string; // Can be string when deserialized from localStorage
-  paymentMethod: 'pix';
+  paymentMethod: 'pix' | 'card';
   paymentStatus: 'pending' | 'completed' | 'failed';
+  pixCode?: string; // Código PIX retornado pela API
 }
