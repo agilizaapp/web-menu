@@ -15,6 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link
+          rel="preload"
+          as="video"
+          href="/videos/delivery-app-loading.mp4"
+          type="video/mp4"
+        />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         <ThemeProvider>
           {children}

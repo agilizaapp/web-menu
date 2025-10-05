@@ -75,7 +75,6 @@ const restaurant: {
       "id": 1,
       "name": "Pizza Margherita",
       "description": "Pizza clássica com mussarela fresca, molho de tomate e manjericão",
-      "image": "https://images.unsplash.com/photo-1667207394004-acb6aaf4790e",
       "category": "Pizzas",
       "price": 18.99,
       "available": true,

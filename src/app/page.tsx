@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AdminApp } from '@/components/AdminApp';
 import { useRestaurantStore } from '@/stores/restaurantStore';
 import { RestaurantsService } from '@/services/restaurant.service';
@@ -11,9 +11,9 @@ import type { MenuItem } from '@/types/entities.types';
 import { CustomerApp } from '@/components/CustomerApp';
 
 /* mock */
-// import { RestaurantSelector } from '@/components/RestaurantSelector';
-// import { CustomerApp } from '@/components/CustomerApp';
-// import { mockRestaurants, mockRestaurantData } from '@/data/mockData';
+import { RestaurantSelector } from '@/components/RestaurantSelector';
+import { mockRestaurants, mockRestaurantData } from '@/data/mockData';
+import { LoaderCircle } from 'lucide-react';
 
 type AppMode = 'customer' | 'admin';
 
@@ -22,11 +22,25 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
   const { currentRestaurant, setCurrentRestaurant } = useRestaurantStore();
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   // useEffect(() => {
+  //   setIsLoading(true);
+  //   if (videoRef.current) {
+  //     videoRef.current.play().catch(err => {
+  //       console.warn('Autoplay bloqueado:', err);
+  //     });
+  //   }
   //   setCurrentRestaurant(mockRestaurantData);
+  //   setIsLoading(false);
   // }, []);
 
   useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(err => {
+        console.warn('Autoplay bloqueado:', err);
+      });
+    }
     const fetchRestaurant = async () => {
       try {
         const restaurant = await RestaurantsService.getAllProducts(true);
@@ -57,6 +71,7 @@ export default function Page() {
           };
 
           setCurrentRestaurant(restaurantData);
+          setIsLoading(false);
         } else {
           toast.error('Erro ao carregar dados do restaurante');
         }
@@ -66,7 +81,6 @@ export default function Page() {
         } else {
           toast.error('Erro ao carregar restaurante');
         }
-      } finally {
         setIsLoading(false);
       }
     };
@@ -79,8 +93,23 @@ export default function Page() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando restaurante...</p>
+          <div className="relative w-48 h-48 mx-auto">
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            className="w-full h-full object-contain"
+          >
+            <source src="/videos/delivery-app-loading.mp4" type="video/mp4" />
+            {/* Fallback para navegadores antigos */}
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          </video>
+        </div>
+          <LoaderCircle className="animate-spin rounded-full h-12 w-12 mx-auto mb-4" />
+          <p className="text-muted-foreground">Buscando os melhores pratos para você...</p>
         </div>
       </div>
     );
@@ -108,9 +137,9 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* {!currentRestaurant ? (
+      {!currentRestaurant ? (
         <RestaurantSelector onSelectMode={setAppMode} />
-      ) : ( <></> )} */}
+      ) : ( <></> )}
       {/* Mode Switch Button - Fixed Position */}
       {/* <div className="fixed top-4 right-4 z-50">
         <button
@@ -125,7 +154,8 @@ export default function Page() {
       {appMode === 'customer' ? (
         <CustomerApp />
       ) : (
-        <AdminApp />
+        // <AdminApp />
+        <></>
       )}
     </div>
   );
