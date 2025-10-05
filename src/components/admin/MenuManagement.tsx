@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { useRestaurantStore } from '@/stores';
-import { MenuItem } from '@/types';
+import { MenuItem } from '@/types/entities.types';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 

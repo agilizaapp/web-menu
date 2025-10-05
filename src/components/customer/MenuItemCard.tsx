@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MenuItem } from '@/types';
+import { MenuItem } from '@/types/entities.types';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 
 interface MenuItemCardProps {

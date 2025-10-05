@@ -1,5 +1,128 @@
-import { MenuItem, Order } from '@/types';
-import { Restaurant } from '@/types/entities.types';
+import { IStoreConfigs, Order } from '@/types/index';
+import { MenuItem, MenuCategory, Restaurant } from '@/types/entities.types';
+
+
+const restaurant: {
+  products: MenuItem[];
+  categories: MenuCategory[] | string[];
+  store: IStoreConfigs;
+} = {
+  "store": {
+    "name": "Lelek's Food",
+    "type": "restaurant",
+    "configs": {
+      "theme": {
+        "logo": "https://natelhacupimrestaurante.com.br/wp-content/uploads/2020/02/Co%CC%81pia-de-Co%CC%81pia-de-Logotipos-Natelha-Cupim-sem-fundo-1-150x75.png",
+        "primaryColor": "#DC2626",
+        "secondaryColor": "#FEF2F2",
+        "accentColor": "#FBBF24"
+      },
+      "settings": {
+        "hours": "11:00 - 23:00",
+        "useCustomHours": true,
+        "customHours": {
+          "monday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+          },
+          "tuesday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+          },
+          "wednesday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+          },
+          "thursday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+          },
+          "friday": {
+            "open": "11:00",
+            "close": "23:00",
+            "closed": false
+          },
+          "saturday": {
+            "open": "12:00",
+            "close": "00:00",
+            "closed": false
+          },
+          "sunday": {
+            "open": "12:00",
+            "close": "22:00",
+            "closed": false
+          }
+        },
+        "deliveryFee": 5,
+        "deliveryZones": [
+          "Centro",
+          "Zona Sul",
+          "Zona Norte"
+        ],
+        "pixKey": "rychard.souza1111@gmail.com"
+      }
+    }
+  },
+  "categories": [
+    "Pizzas"
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Pizza Margherita",
+      "description": "Pizza clássica com mussarela fresca, molho de tomate e manjericão",
+      "image": "https://images.unsplash.com/photo-1667207394004-acb6aaf4790e",
+      "category": "Pizzas",
+      "price": 18.99,
+      "available": true,
+      "modifiers": [
+        {
+          "id": "size",
+          "name": "Tamanho",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "small",
+              "name": "Pequena (30cm)",
+              "price": 0
+            },
+            {
+              "id": "medium",
+              "name": "Média (35cm)",
+              "price": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+export const mockRestaurantData: Restaurant = {
+  id: 1,
+  name: restaurant.store.name || "",
+  theme: {
+    name: restaurant.store.name,
+    logo: restaurant.store.configs.theme.logo,
+    primaryColor: restaurant.store.configs.theme.primaryColor,
+    secondaryColor: restaurant.store.configs.theme.secondaryColor,
+    accentColor: restaurant.store.configs.theme.accentColor,
+  },
+  settings: {
+    hours: restaurant.store.configs.settings.hours,
+    useCustomHours: restaurant.store.configs.settings.useCustomHours,
+    customHours: restaurant.store.configs.settings.customHours,
+    deliveryFee: restaurant.store.configs.settings.deliveryFee,
+    deliveryZones: restaurant.store.configs.settings.deliveryZones,
+    pixKey: restaurant.store.configs.settings.pixKey,
+  },
+  menu: restaurant.products as MenuItem[],
+};
 
 export const mockRestaurants: Restaurant[] = [
   {
@@ -82,7 +205,7 @@ export const mockRestaurants: Restaurant[] = [
 export const mockMenuItems: MenuItem[] = [
   // Pizza Palace Items
   {
-    id: 'margherita-pizza',
+    id: 1,
     name: 'Pizza Margherita',
     description: 'Pizza clássica com mussarela fresca, molho de tomate e manjericão',
     price: 18.99,
@@ -116,7 +239,7 @@ export const mockMenuItems: MenuItem[] = [
   },
   // Sushi House Items
   {
-    id: 'salmon-roll',
+    id: 2,
     name: 'Roll de Salmão com Abacate',
     description: 'Salmão fresco e abacate com pepino, coberto com gergelim',
     price: 12.99,
@@ -139,7 +262,7 @@ export const mockMenuItems: MenuItem[] = [
   },
   // Burger Barn Items  
   {
-    id: 'classic-burger',
+    id: 3,
     name: 'Cheeseburger Clássico',
     description: 'Hambúrguer de carne com queijo, alface, tomate, cebola e nosso molho especial',
     price: 14.99,
@@ -173,7 +296,7 @@ export const mockMenuItems: MenuItem[] = [
   },
   // Additional items for variety
   {
-    id: 'pasta-carbonara',
+    id: 4,
     name: 'Macarrão à Carbonara',
     description: 'Massa cremosa com bacon, queijo parmesão e pimenta preta',
     price: 16.99,
@@ -182,7 +305,7 @@ export const mockMenuItems: MenuItem[] = [
     available: true
   },
   {
-    id: 'caesar-salad',
+    id: 5,
     name: 'Salada Caesar',
     description: 'Alface romana fresca com parmesão, croutons e molho caesar',
     price: 11.99,
@@ -191,7 +314,7 @@ export const mockMenuItems: MenuItem[] = [
     available: true
   },
   {
-    id: 'chocolate-cake',
+    id: 6,
     name: 'Bolo de Chocolate',
     description: 'Bolo de chocolate rico com ganache de chocolate e frutas vermelhas frescas',
     price: 8.99,

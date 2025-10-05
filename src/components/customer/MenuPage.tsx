@@ -5,16 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { MenuItemCard } from './MenuItemCard';
 import { MenuItemModal } from './MenuItemModal';
-import { useCartStore, useRestaurantStore } from '@/stores';
-import { MenuItem, WeeklySchedule } from '@/types';
+import { useCartStore } from '@/stores/cartStore';
+import { useRestaurantStore } from '@/stores/restaurantStore';
+import { WeeklySchedule } from '@/types';
+import { MenuItem } from '@/types/entities.types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import Image from 'next/image';
 
 interface MenuPageProps {
   onStartCheckout: () => void;
 }
 
 export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
-  const { currentRestaurant, menu } = useRestaurantStore();
+  const { currentRestaurant, menu, categories } = useRestaurantStore();
   const { getCartItemCount, getTotalCartPrice } = useCartStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -27,15 +30,22 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
     setIsClient(true);
   }, []);
 
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(menu.map(item => item.category)));
-    return ['all', ...cats];
-  }, [menu]);
+  const allCategories = useMemo(() => {
+    // if (menu?.length > 0) {
+    //   const cats = Array.from(new Set(menu.map(item => item.category)));
+    // }
+    return ['all'].concat(categories as string[]);
+  }, [categories]);
 
   const filteredMenu = useMemo(() => {
     return menu.filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      if (typeof item === 'string') {
+        const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'all' || item === selectedCategory;
+        return matchesSearch && matchesCategory;
+      }
+
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       return matchesSearch && matchesCategory && item.available;
     });
@@ -44,6 +54,9 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
   const groupedMenu = useMemo(() => {
     const grouped: { [category: string]: MenuItem[] } = {};
     filteredMenu.forEach(item => {
+      if (typeof item === 'string') {
+        return;
+      }
       if (!grouped[item.category]) {
         grouped[item.category] = [];
       }
@@ -96,13 +109,23 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
         style={{ backgroundColor: 'var(--restaurant-primary)', color: 'white' }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-3xl">{currentRestaurant.theme.logo}</span>
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold">{currentRestaurant.theme.name}</h1>
+          <div className="w-full flex flex-col items-start mb-4">
+            {/* <img className="text-3xl max-h-20" width="150" height="80" src={currentRestaurant?.theme?.logo} alt={`Logo do Restaurante ${currentRestaurant?.theme?.name}`} /> */}
+            <Image
+              src={currentRestaurant?.theme?.logo}
+              alt={`Logo ${currentRestaurant?.theme?.name}`}
+              width={150}
+              height={80}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlZWUiLz48L3N2Zz4="
+              className="relative w-[150px] h-[80px] object-contain"
+              priority
+            />
+            <div className="w-full flex-1">
+              <h1 className="text-xl font-semibold">{currentRestaurant?.theme?.name}</h1>
               
               {/* Hours Display */}
-              {currentRestaurant.settings.useCustomHours && currentRestaurant.settings.customHours ? (
+              {currentRestaurant?.settings?.useCustomHours && currentRestaurant?.settings?.customHours ? (
                 <Collapsible open={hoursOpen} onOpenChange={setHoursOpen}>
                   <CollapsibleTrigger className="flex items-center gap-1 text-white/80 text-sm hover:text-white transition-colors">
                     <Clock className="w-3 h-3" />
@@ -111,8 +134,8 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-2">
                     <div className="bg-white/10 rounded-lg p-3 space-y-1">
-                      {(Object.keys(currentRestaurant.settings.customHours) as Array<keyof WeeklySchedule>).map(day => {
-                        const schedule = currentRestaurant.settings.customHours![day];
+                      {(Object.keys(currentRestaurant?.settings?.customHours) as Array<keyof WeeklySchedule>).map(day => {
+                        const schedule = currentRestaurant?.settings?.customHours![day];
                         return (
                           <div key={day} className="flex justify-between items-center text-sm">
                             <span className="text-white/90">{getDayName(day)}</span>
@@ -132,7 +155,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
               ) : (
                 <p className="text-white/80 text-sm flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {currentRestaurant.settings.hours}
+                  {currentRestaurant?.settings?.hours}
                 </p>
               )}
             </div>
@@ -155,7 +178,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
       <div className="sticky top-[120px] z-30 bg-background/95 backdrop-blur-sm border-b px-4 py-3">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map(category => (
+            {allCategories.map(category => (
               <Button
                 key={category}
                 variant={selectedCategory === category ? 'default' : 'outline'}

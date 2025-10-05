@@ -12,7 +12,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     // Apply theme on mount and whenever restaurant changes
-    applyTheme();
+    if (typeof window !== 'undefined' && currentRestaurant?.name) applyTheme();
   }, [currentRestaurant, applyTheme]);
 
   return <>{children}</>;

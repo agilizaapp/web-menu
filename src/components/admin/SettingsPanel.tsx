@@ -26,11 +26,11 @@ export const SettingsPanel: React.FC = () => {
   const { currentRestaurant, setCurrentRestaurant } = useRestaurantStore();
   const [formData, setFormData] = useState({
     name: currentRestaurant?.name || '',
-    hours: currentRestaurant?.settings.hours || '',
-    useCustomHours: currentRestaurant?.settings.useCustomHours || false,
-    customHours: currentRestaurant?.settings.customHours || defaultSchedule,
-    deliveryFee: currentRestaurant?.settings.deliveryFee || 0,
-    pixKey: currentRestaurant?.settings.pixKey || '',
+    hours: currentRestaurant?.settings?.hours || '',
+    useCustomHours: currentRestaurant?.settings?.useCustomHours || false,
+    customHours: currentRestaurant?.settings?.customHours || defaultSchedule,
+    deliveryFee: currentRestaurant?.settings?.deliveryFee || 0,
+    pixKey: currentRestaurant?.settings?.pixKey || '',
     primaryColor: currentRestaurant?.theme.primaryColor || '#DC2626',
     secondaryColor: currentRestaurant?.theme.secondaryColor || '#FEF2F2',
     accentColor: currentRestaurant?.theme.accentColor || '#FBBF24',
@@ -45,7 +45,7 @@ export const SettingsPanel: React.FC = () => {
       ...currentRestaurant,
       name: formData.name,
       theme: {
-        ...currentRestaurant.theme,
+        ...currentRestaurant?.theme,
         name: formData.name,
         primaryColor: formData.primaryColor,
         secondaryColor: formData.secondaryColor,
@@ -53,7 +53,7 @@ export const SettingsPanel: React.FC = () => {
         logo: formData.logo
       },
       settings: {
-        ...currentRestaurant.settings,
+        ...currentRestaurant?.settings,
         hours: formData.hours,
         useCustomHours: formData.useCustomHours,
         customHours: formData.customHours,
