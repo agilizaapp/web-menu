@@ -50,7 +50,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
           className="fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg"
           style={{ backgroundColor: 'var(--restaurant-primary)' }}
         >
-          <ShoppingBag className="w-6 h-6" />
+          <ShoppingBag className="w-8 h-8" />
           <Badge 
             className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs"
             style={{ backgroundColor: 'var(--restaurant-accent)', color: 'white' }}

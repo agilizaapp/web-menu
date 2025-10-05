@@ -245,7 +245,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
         )}
       </div>
 
-      {/* Floating Cart Button */}
+      {/* Floating Cart Button
       {isClient && cartCount > 0 && (
         <div className="fixed bottom-4 left-4 right-4 z-50">
           <div className="max-w-4xl mx-auto">
@@ -254,8 +254,8 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
               className="w-full h-14 text-base shadow-lg"
               style={{ backgroundColor: "var(--restaurant-primary)" }}
             >
-              <ShoppingBag className="w-5 h-5 mr-2" />
-              <span className="flex-1">Ver Carrinho ({cartCount} itens)</span>
+              <ShoppingBag className="w-5 h-5 mr-2 hidden sm:!flex" />
+              <span className="flex gap-1 sm:!flex-1">Ver Carrinho ({cartCount} itens)</span>
               <span className="font-semibold">
                 R${" "}
                 {cartTotal.toLocaleString("pt-BR", {
@@ -266,7 +266,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Menu Item Modal */}
       {selectedItem && (
