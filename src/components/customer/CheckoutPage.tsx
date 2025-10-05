@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { ArrowLeft, MapPin, Store, CreditCard, QrCode as QrCodeIcon, Trash2, ShoppingBag } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, MapPin, Store, CreditCard, QrCode as QrCodeIcon, Trash2, ShoppingBag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartStore, useRestaurantStore } from "@/stores";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
+import type { AddressData } from "@/types";
+import { fetchAddressByCEP, formatCEP, isValidCEP } from "@/services/viaCEP";
+import { toast } from "sonner";
 
 interface CustomerData {
   phone: string;
@@ -20,7 +23,7 @@ interface CheckoutPageProps {
   onBack: () => void;
   onProceedToPayment: (data: {
     deliveryType: "delivery" | "pickup";
-    address: string;
+    address: AddressData | string;
     paymentMethod: "pix" | "card";
   }) => void;
 }
@@ -34,9 +37,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const { currentRestaurant } = useRestaurantStore();
 
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
-  const [address, setAddress] = useState("");
+  const [addressData, setAddressData] = useState<AddressData>({
+    street: "",
+    number: "",
+    neighborhood: "",
+    postalCode: "",
+    complement: "",
+  });
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
-  const [addressError, setAddressError] = useState("");
+  const [addressErrors, setAddressErrors] = useState<Partial<Record<keyof AddressData, string>>>({});
+  const [isLoadingCEP, setIsLoadingCEP] = useState(false);
 
   const cartTotal = getTotalCartPrice();
   const deliveryFee = deliveryType === "delivery" ? (currentRestaurant?.settings?.deliveryFee || 0) : 0;
@@ -44,36 +54,125 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const restaurantAddress = currentRestaurant?.settings?.address || "Rua Exemplo, 123 - Centro";
 
-  const validateAddress = (addr: string): string => {
-    if (!addr.trim()) return "Endereço é obrigatório para entrega";
-    if (addr.trim().length < 10) return "Endereço muito curto (mínimo 10 caracteres)";
-    if (addr.length > 200) return "Endereço muito longo (máximo 200 caracteres)";
-    return "";
+  const validateAddressField = (field: keyof AddressData, value: string): string => {
+    switch (field) {
+      case 'street':
+        if (!value.trim()) return "Rua é obrigatória";
+        if (value.trim().length < 3) return "Rua muito curta";
+        return "";
+      case 'number':
+        if (!value.trim()) return "Número é obrigatório";
+        return "";
+      case 'neighborhood':
+        if (!value.trim()) return "Bairro é obrigatório";
+        if (value.trim().length < 3) return "Bairro muito curto";
+        return "";
+      case 'postalCode':
+        if (!value.trim()) return "CEP é obrigatório";
+        const numbers = value.replace(/\D/g, '');
+        if (numbers.length !== 8) return "CEP deve ter 8 dígitos";
+        return "";
+      case 'complement':
+        return ""; // Opcional
+      default:
+        return "";
+    }
   };
 
-  const handleAddressChange = (value: string) => {
-    const sanitized = value.replace(/[<>"'`]/g, "");
-    if (sanitized.length <= 200) {
-      setAddress(sanitized);
-      if (addressError) {
-        setAddressError(validateAddress(sanitized));
+  const handleAddressChange = (field: keyof AddressData, value: string) => {
+    let sanitized = value.replace(/[<>"'`]/g, "");
+    
+    // Formatação especial para CEP
+    if (field === 'postalCode') {
+      sanitized = sanitized.replace(/\D/g, '');
+      if (sanitized.length > 8) sanitized = sanitized.slice(0, 8);
+      // Formata como XXXXX-XXX
+      if (sanitized.length > 5) {
+        sanitized = `${sanitized.slice(0, 5)}-${sanitized.slice(5)}`;
       }
     }
+    
+    setAddressData(prev => ({ ...prev, [field]: sanitized }));
+    
+    // Limpa erro ao digitar
+    if (addressErrors[field]) {
+      setAddressErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Buscar endereço via CEP quando completo (8 dígitos)
+  useEffect(() => {
+    const searchCEP = async () => {
+      const cleanCEP = addressData.postalCode.replace(/\D/g, '');
+      
+      // Só busca se tiver 8 dígitos
+      if (!isValidCEP(cleanCEP)) {
+        return;
+      }
+
+      setIsLoadingCEP(true);
+
+      try {
+        const address = await fetchAddressByCEP(cleanCEP);
+
+        if (address) {
+          // Preenche automaticamente rua e bairro (apenas se vazios)
+          setAddressData(prev => ({
+            ...prev,
+            street: prev.street || address.logradouro || '',
+            neighborhood: prev.neighborhood || address.bairro || '',
+            // Mantém número e complemento do usuário
+          }));
+
+          toast.success('✅ CEP encontrado!');
+        } else {
+          toast.warning('⚠️ CEP não encontrado. Preencha manualmente.');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+        toast.error('❌ Erro ao buscar CEP');
+      } finally {
+        setIsLoadingCEP(false);
+      }
+    };
+
+    // Delay para evitar chamadas desnecessárias ao digitar
+    const timeoutId = setTimeout(() => {
+      searchCEP();
+    }, 500); // Aguarda 500ms após parar de digitar
+
+    return () => clearTimeout(timeoutId);
+  }, [addressData.postalCode]); // Executa quando CEP muda
+
+  const validateAllAddressFields = (): boolean => {
+    const errors: Partial<Record<keyof AddressData, string>> = {};
+    let isValid = true;
+
+    (Object.keys(addressData) as Array<keyof AddressData>).forEach(field => {
+      if (field !== 'complement') { // Complement é opcional
+        const error = validateAddressField(field, addressData[field] || '');
+        if (error) {
+          errors[field] = error;
+          isValid = false;
+        }
+      }
+    });
+
+    setAddressErrors(errors);
+    return isValid;
   };
 
   const handleProceedToPayment = () => {
     // Validar endereço se for entrega
     if (deliveryType === "delivery") {
-      const error = validateAddress(address);
-      if (error) {
-        setAddressError(error);
+      if (!validateAllAddressFields()) {
         return;
       }
     }
 
     onProceedToPayment({
       deliveryType,
-      address: deliveryType === "delivery" ? address : restaurantAddress,
+      address: deliveryType === "delivery" ? addressData : restaurantAddress,
       paymentMethod,
     });
   };
@@ -111,7 +210,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               value={deliveryType}
               onValueChange={(value) => {
                 setDeliveryType(value as "delivery" | "pickup");
-                setAddressError("");
+                setAddressErrors({});
               }}
             >
               <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
@@ -145,23 +244,125 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
             {/* Campo de Endereço ou Endereço do Restaurante */}
             {deliveryType === "delivery" ? (
-              <div className="space-y-2">
-                <Label htmlFor="address">
-                  Endereço de Entrega <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="address"
-                  placeholder="Rua, número, bairro, complemento..."
-                  value={address}
-                  onChange={(e) => handleAddressChange(e.target.value)}
-                  onBlur={() => {
-                    if (address) setAddressError(validateAddress(address));
-                  }}
-                  className={addressError ? "border-destructive" : ""}
-                />
-                {addressError && (
-                  <p className="text-sm text-destructive">{addressError}</p>
-                )}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* CEP - PRIMEIRO CAMPO */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="postalCode">
+                      CEP <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="postalCode"
+                        placeholder="12345-678"
+                        value={addressData.postalCode}
+                        onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                        onBlur={() => {
+                          if (addressData.postalCode) {
+                            const error = validateAddressField('postalCode', addressData.postalCode);
+                            if (error) setAddressErrors(prev => ({ ...prev, postalCode: error }));
+                          }
+                        }}
+                        className={addressErrors.postalCode ? "border-destructive" : ""}
+                        maxLength={9}
+                        disabled={isLoadingCEP}
+                      />
+                      {isLoadingCEP && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    {addressErrors.postalCode && (
+                      <p className="text-sm text-destructive">{addressErrors.postalCode}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Digite o CEP para preencher automaticamente
+                    </p>
+                  </div>
+
+                  {/* Rua */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="street">
+                      Rua <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="street"
+                      placeholder="Nome da rua"
+                      value={addressData.street}
+                      onChange={(e) => handleAddressChange('street', e.target.value)}
+                      onBlur={() => {
+                        if (addressData.street) {
+                          const error = validateAddressField('street', addressData.street);
+                          if (error) setAddressErrors(prev => ({ ...prev, street: error }));
+                        }
+                      }}
+                      className={addressErrors.street ? "border-destructive" : ""}
+                      disabled={isLoadingCEP}
+                    />
+                    {addressErrors.street && (
+                      <p className="text-sm text-destructive">{addressErrors.street}</p>
+                    )}
+                  </div>
+
+                  {/* Número */}
+                  <div className="space-y-2">
+                    <Label htmlFor="number">
+                      Número <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="number"
+                      placeholder="123"
+                      value={addressData.number}
+                      onChange={(e) => handleAddressChange('number', e.target.value)}
+                      onBlur={() => {
+                        if (addressData.number) {
+                          const error = validateAddressField('number', addressData.number);
+                          if (error) setAddressErrors(prev => ({ ...prev, number: error }));
+                        }
+                      }}
+                      className={addressErrors.number ? "border-destructive" : ""}
+                    />
+                    {addressErrors.number && (
+                      <p className="text-sm text-destructive">{addressErrors.number}</p>
+                    )}
+                  </div>
+
+                  {/* Bairro */}
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">
+                      Bairro <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="neighborhood"
+                      placeholder="Centro"
+                      value={addressData.neighborhood}
+                      onChange={(e) => handleAddressChange('neighborhood', e.target.value)}
+                      onBlur={() => {
+                        if (addressData.neighborhood) {
+                          const error = validateAddressField('neighborhood', addressData.neighborhood);
+                          if (error) setAddressErrors(prev => ({ ...prev, neighborhood: error }));
+                        }
+                      }}
+                      className={addressErrors.neighborhood ? "border-destructive" : ""}
+                      disabled={isLoadingCEP}
+                    />
+                    {addressErrors.neighborhood && (
+                      <p className="text-sm text-destructive">{addressErrors.neighborhood}</p>
+                    )}
+                  </div>
+
+                  {/* Complemento */}
+                  <div className="space-y-2">
+                    <Label htmlFor="complement">Complemento (Opcional)</Label>
+                    <Input
+                      id="complement"
+                      placeholder="Apto 101, Bloco B..."
+                      value={addressData.complement}
+                      onChange={(e) => handleAddressChange('complement', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="p-4 bg-muted/50 rounded-lg space-y-1">

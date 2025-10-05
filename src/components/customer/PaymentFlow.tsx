@@ -18,6 +18,7 @@ import { useCartStore, useRestaurantStore, useOrderStore } from "@/stores";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { createOrderPayload, validateOrderPayload } from "@/utils/orderUtils";
+import type { AddressData } from "@/types";
 
 interface CustomerData {
   phone: string;
@@ -27,7 +28,7 @@ interface CustomerData {
 
 interface CheckoutData {
   deliveryType: "delivery" | "pickup";
-  address: string;
+  address: AddressData | string;
   paymentMethod: "pix" | "card";
 }
 

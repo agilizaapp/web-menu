@@ -1,11 +1,19 @@
 // API Base URL - configurar no .env
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+export interface AddressData {
+  street: string;
+  number: string;
+  neighborhood: string;
+  postalCode: string;
+  complement?: string;
+}
+
 interface CustomerData {
   phone: string;
   name: string;
   birthdate?: string;
-  address?: string;
+  address?: AddressData;
 }
 
 interface OrderModifier {
