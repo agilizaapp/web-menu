@@ -1,14 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, ShoppingBag, Filter, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, ShoppingBag, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { MenuItemCard } from './MenuItemCard';
 import { MenuItemModal } from './MenuItemModal';
 import { useCartStore } from '@/stores/cartStore';
 import { useRestaurantStore } from '@/stores/restaurantStore';
 import { WeeklySchedule } from '@/types';
-import { MenuItem } from '@/types/entities.types';
+import { MenuItem as MenuItemNewType } from "@/types/entities.types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 
@@ -21,7 +20,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
   const { getCartItemCount, getTotalCartPrice } = useCartStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MenuItemNewType | null>(null);
   const [hoursOpen, setHoursOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -39,10 +38,9 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
 
   const filteredMenu = useMemo(() => {
     return menu.filter(item => {
+      // Skip string items - they shouldn't be in the menu array
       if (typeof item === 'string') {
-        const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = selectedCategory === 'all' || item === selectedCategory;
-        return matchesSearch && matchesCategory;
+        return false;
       }
 
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -52,11 +50,8 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
   }, [menu, searchQuery, selectedCategory]);
 
   const groupedMenu = useMemo(() => {
-    const grouped: { [category: string]: MenuItem[] } = {};
+    const grouped: { [category: string]: MenuItemNewType[] } = {};
     filteredMenu.forEach(item => {
-      if (typeof item === 'string') {
-        return;
-      }
       if (!grouped[item.category]) {
         grouped[item.category] = [];
       }
@@ -104,9 +99,9 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with Restaurant Branding */}
-      <div 
+      <div
         className="sticky top-0 z-40 px-4 py-6 shadow-sm"
-        style={{ backgroundColor: 'var(--restaurant-primary)', color: 'white' }}
+        style={{ backgroundColor: "var(--restaurant-primary)", color: "white" }}
       >
         <div className="max-w-4xl mx-auto">
           <div className="w-full flex flex-col items-start mb-4">
@@ -122,28 +117,46 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
               priority
             />
             <div className="w-full flex-1">
-              <h1 className="text-xl font-semibold">{currentRestaurant?.theme?.name}</h1>
-              
+              <h1 className="text-xl font-semibold">
+                {currentRestaurant?.theme?.name}
+              </h1>
+
               {/* Hours Display */}
-              {currentRestaurant?.settings?.useCustomHours && currentRestaurant?.settings?.customHours ? (
+              {currentRestaurant?.settings?.useCustomHours &&
+              currentRestaurant?.settings?.customHours ? (
                 <Collapsible open={hoursOpen} onOpenChange={setHoursOpen}>
                   <CollapsibleTrigger className="flex items-center gap-1 text-white/80 text-sm hover:text-white transition-colors">
                     <Clock className="w-3 h-3" />
                     <span>Ver horários de funcionamento</span>
-                    {hoursOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    {hoursOpen ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-2">
                     <div className="bg-white/10 rounded-lg p-3 space-y-1">
-                      {(Object.keys(currentRestaurant?.settings?.customHours) as Array<keyof WeeklySchedule>).map(day => {
-                        const schedule = currentRestaurant?.settings?.customHours![day];
+                      {(
+                        Object.keys(
+                          currentRestaurant?.settings?.customHours
+                        ) as Array<keyof WeeklySchedule>
+                      ).map((day) => {
+                        const schedule =
+                          currentRestaurant?.settings?.customHours![day];
                         return (
-                          <div key={day} className="flex justify-between items-center text-sm">
-                            <span className="text-white/90">{getDayName(day)}</span>
+                          <div
+                            key={day}
+                            className="flex justify-between items-center text-sm"
+                          >
+                            <span className="text-white/90">
+                              {getDayName(day)}
+                            </span>
                             {schedule.closed ? (
                               <span className="text-white/60">Fechado</span>
                             ) : (
                               <span className="text-white/90">
-                                {formatTime(schedule.open)} - {formatTime(schedule.close)}
+                                {formatTime(schedule.open)} -{" "}
+                                {formatTime(schedule.close)}
                               </span>
                             )}
                           </div>
@@ -178,20 +191,26 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
       <div className="sticky top-[120px] z-30 bg-background/95 backdrop-blur-sm border-b px-4 py-3">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {allCategories.map(category => (
+            {allCategories.map((category) => (
               <Button
                 key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
+                variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(category)}
                 className="shrink-0 capitalize"
                 style={{
-                  backgroundColor: selectedCategory === category ? 'var(--restaurant-primary)' : undefined,
-                  borderColor: 'var(--restaurant-primary)',
-                  color: selectedCategory === category ? 'white' : 'var(--restaurant-primary)'
+                  backgroundColor:
+                    selectedCategory === category
+                      ? "var(--restaurant-primary)"
+                      : undefined,
+                  borderColor: "var(--restaurant-primary)",
+                  color:
+                    selectedCategory === category
+                      ? "white"
+                      : "var(--restaurant-primary)",
                 }}
               >
-                {category === 'all' ? 'Todos os Itens' : category}
+                {category === "all" ? "Todos os Itens" : category}
               </Button>
             ))}
           </div>
@@ -202,9 +221,11 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
       <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
         {Object.entries(groupedMenu).map(([category, items]) => (
           <div key={category} className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 capitalize">{category}</h2>
+            <h2 className="text-xl font-semibold mb-4 capitalize">
+              {category}
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {items.map(item => (
+              {items.map((item) => (
                 <MenuItemCard
                   key={item.id}
                   item={item}
@@ -217,7 +238,9 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
 
         {filteredMenu.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">Nenhum item encontrado correspondente à sua busca.</p>
+            <p className="text-muted-foreground">
+              Nenhum item encontrado correspondente à sua busca.
+            </p>
           </div>
         )}
       </div>
@@ -229,11 +252,17 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
             <Button
               onClick={onStartCheckout}
               className="w-full h-14 text-base shadow-lg"
-              style={{ backgroundColor: 'var(--restaurant-primary)' }}
+              style={{ backgroundColor: "var(--restaurant-primary)" }}
             >
               <ShoppingBag className="w-5 h-5 mr-2" />
               <span className="flex-1">Ver Carrinho ({cartCount} itens)</span>
-              <span className="font-semibold">R$ {cartTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="font-semibold">
+                R${" "}
+                {cartTotal.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </Button>
           </div>
         </div>
@@ -242,7 +271,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
       {/* Menu Item Modal */}
       {selectedItem && (
         <MenuItemModal
-          item={selectedItem}
+          item={{...selectedItem, id: selectedItem.id, image: selectedItem.image || ''}}
           onClose={() => setSelectedItem(null)}
         />
       )}

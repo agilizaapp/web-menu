@@ -7,8 +7,8 @@ interface RestaurantStore {
   menu: MenuItem[];
   categories: string[];
   setCurrentRestaurant: (restaurant: Restaurant) => void;
-  updateMenuItem: (itemId: string, updates: Partial<MenuItem | string[]>) => void;
-  loadRestaurantData: (restaurantId: number) => void;
+  updateMenuItem: (itemId: number, updates: Partial<MenuItem | string[]>) => void;
+  //loadRestaurantData: (restaurantId: number) => void;
   applyTheme: () => void;
   // setMenu: (menu: MenuItem[]) => void;
   setMenu: (menu: MenuItem[]) => void;
@@ -51,7 +51,7 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
     set({ categories });
   },
 
-  updateMenuItem: (itemId: string, updates: Partial<MenuItem | string>) => {
+  updateMenuItem: (itemId: number, updates: Partial<MenuItem>) => {
     set((state) => ({
       menu: state.menu.map((item) =>
         item.id === itemId ? { ...item, ...updates } : item
@@ -59,19 +59,19 @@ export const useRestaurantStore = create<RestaurantStore>((set, get) => ({
     }));
   },
 
-  loadRestaurantData: (restaurantId: number) => {
-    // Encontra restaurante nos dados mock
-    const restaurant = mockRestaurants.find((r) => r.id === restaurantId);
+  // loadRestaurantData: (restaurantId: number) => {
+  //   // Encontra restaurante nos dados mock
+  //   const restaurant = mockRestaurants.find((r) => r.id === restaurantId);
 
-    if (restaurant) {
-      set({
-        currentRestaurant: restaurant,
-        // menu: mockMenuItems, // Em produção, filtrar por restaurante
-      });
+  //   if (restaurant) {
+  //     set({
+  //       currentRestaurant: restaurant,
+  //       // menu: mockMenuItems, // Em produção, filtrar por restaurante
+  //     });
 
-      get().applyTheme();
-    }
-  },
+  //     get().applyTheme();
+  //   }
+  // },
 
   applyTheme: () => {
     const { currentRestaurant } = get();

@@ -69,12 +69,12 @@ export const MenuManagement: React.FC = () => {
     setFormData({});
   };
 
-  const handleToggleAvailability = (itemId: string, available: boolean) => {
+  const handleToggleAvailability = (itemId: number, available: boolean) => {
     updateMenuItem(itemId, { available });
     toast.success(`Item ${available ? 'enabled' : 'disabled'} successfully`);
   };
 
-  const handleDelete = (itemId: string) => {
+  const handleDelete = (itemId: number) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       // In a real app, this would delete from the backend
       toast.success('Menu item deleted successfully');

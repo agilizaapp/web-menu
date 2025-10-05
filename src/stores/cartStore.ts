@@ -5,8 +5,8 @@ import { CartItem } from '@/types';
 interface CartStore {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (itemId: string) => void;
-  updateCartItem: (itemId: string, quantity: number) => void;
+  removeFromCart: (itemId: string) => void; // CartItem.id é string
+  updateCartItem: (itemId: string, quantity: number) => void; // CartItem.id é string
   clearCart: () => void;
   getTotalCartPrice: () => number;
   getCartItemCount: () => number;
@@ -40,7 +40,7 @@ export const useCartStore = create<CartStore>()(
           // Adiciona novo item ao carrinho
           const newItem = {
             ...item,
-            id: `cart-${Date.now()}-${Math.random()}`,
+            id: `cart-${Date.now()}-${Math.random()}`, // Mantém o ID do item original
           };
 
           return {

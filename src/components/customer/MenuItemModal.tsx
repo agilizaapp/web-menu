@@ -6,10 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CartItem } from '@/types/index';
-import { MenuItem } from '@/types/entities.types';
+import { CartItem, MenuItem } from '@/types/index';
 import { useCartStore } from '@/stores';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+
 
 interface MenuItemModalProps {
   item: MenuItem;
@@ -71,7 +71,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
 
   const handleAddToCart = () => {
     const cartItem: CartItem = {
-      id: `cart-${Date.now()}-${Math.random()}`,
+      id: `temp-${Date.now()}`, // ID temporário, será substituído pelo cartStore
       menuItem: item,
       quantity,
       selectedModifiers,

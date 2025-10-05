@@ -31,8 +31,8 @@ const { cart, addToCart, clearCart } = useCartStore();
 // Métodos disponíveis:
 - cart: CartItem[]                                    // Array de itens
 - addToCart(item: CartItem): void                     // Adicionar item
-- removeFromCart(itemId: string): void                // Remover item
-- updateCartItem(itemId: string, quantity: number)    // Atualizar quantidade
+- removeFromCart(itemId: number): void                // Remover item
+- updateCartItem(itemId: number, quantity: number)    // Atualizar quantidade
 - clearCart(): void                                   // Limpar carrinho
 - getTotalCartPrice(): number                         // Total em R$
 - getCartItemCount(): number                          // Quantidade de itens

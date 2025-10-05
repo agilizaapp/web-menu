@@ -23,10 +23,11 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    const errorData = error.response?.data as { message?: string, [key: string]: unknown } | undefined;
     const apiError = new ApiError(
-      error.response?.data?.message || error.message,
+      errorData?.message || error.message,
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data as object | undefined
     );
     return Promise.reject(apiError);
   }

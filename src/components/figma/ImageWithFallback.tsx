@@ -11,7 +11,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     setDidError(true)
   }
 
-  const { src, alt, style, className, ...rest } = props;
+  const { src, alt, style, className, width, height, ...rest } = props;
 
   return didError ? (
     <div
@@ -36,8 +36,8 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     </div>
   ) : (
     <Image
-      src={src}
-      alt={alt}
+      src={typeof src === 'string' ? src : ERROR_IMG_SRC}
+      alt={alt ?? ''}
       width={357}
       height={268}
       quality={85}
