@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { useCartStore, useRestaurantStore, useOrderStore, useCustomerStore } from "@/stores";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
@@ -46,6 +47,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   onBack,
   onOrderComplete,
 }) => {
+  
   const { cart, getTotalCartPrice, clearCart } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
   const { addOrder } = useOrderStore();
@@ -110,6 +112,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         // Enviar para API
         const response = await apiService.createOrder(apiPayload);
 
+
         if (!response.success) {
           throw new Error(response.error?.message || 'Erro ao criar pedido');
         }
@@ -119,6 +122,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         const orderId = `order-${apiOrderId}`;
         const apiToken = response.data.token;
         const pixCodeFromAPI = response.data.pix?.copyAndPaste;
+
 
         // ✅ Salvar token no cookie (1 ano)
         cookieService.setCustomerToken(apiToken);
@@ -138,15 +142,20 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         });
 
         // Se for PIX, atualizar o código
-        if (checkoutData.paymentMethod === 'pix' && pixCodeFromAPI) {
-          setPixCode(pixCodeFromAPI);
+        if (checkoutData.paymentMethod === 'pix') {
+          if (pixCodeFromAPI) {
+            setPixCode(pixCodeFromAPI);
+            toast.success("✅ Código PIX gerado!");
+          } else {
+            console.error('❌ API não retornou código PIX');
+            toast.error("❌ Erro: API não retornou código PIX");
+          }
         }
 
         // Marcar como criado
         setOrderCreated(true);
-        
-        toast.success("✅ Código PIX gerado!");
       } catch (error) {
+        console.error('❌ Erro ao criar pedido:', error);
         
         const errorMessage = error instanceof Error 
           ? error.message 
@@ -571,7 +580,3 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
     </div>
   );
 };
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={className}>{children}</label>;
-}

@@ -79,10 +79,14 @@ export default function Page() {
           if (restaurant.customer) {
             const token = cookieService.getCustomerToken();
             if (token) {
+              // NÃO atualizar o telefone - API retorna mascarado (67)*****1768
+              // O telefone completo já está salvo no localStorage
+              const currentPhone = useCustomerStore.getState().phone;
+              
               setCustomer({
                 token,
                 name: restaurant.customer.name,
-                phone: restaurant.customer.phone,
+                phone: currentPhone || restaurant.customer.phone, // Usa o que já estava salvo
                 address: restaurant.customer.address || undefined,
               });
               toast.success(`Bem-vindo de volta, ${restaurant.customer.name}!`);

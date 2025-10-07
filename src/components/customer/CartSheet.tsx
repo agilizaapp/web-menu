@@ -161,10 +161,10 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
               <span>Taxa de Entrega</span>
               <span>R$ {deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            {/* <div className="flex justify-between text-sm">
               <span>Taxas</span>
               <span>R$ {tax.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
+            </div> */}
             <Separator />
             <div className="flex justify-between font-semibold">
               <span>Total</span>

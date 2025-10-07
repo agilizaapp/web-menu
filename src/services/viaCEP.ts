@@ -32,11 +32,9 @@ export async function fetchAddressByCEP(cep: string): Promise<ViaCEPResponse | n
 
     // Valida se tem 8 dígitos
     if (cleanCEP.length !== 8) {
-      console.log('❌ CEP inválido: deve ter 8 dígitos');
       return null;
     }
 
-    console.log('🔍 Buscando CEP:', cleanCEP);
 
     const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
 
@@ -49,11 +47,9 @@ export async function fetchAddressByCEP(cep: string): Promise<ViaCEPResponse | n
 
     // ViaCEP retorna {erro: true} quando não encontra o CEP
     if (data.erro) {
-      console.log('⚠️ CEP não encontrado na base ViaCEP');
       return null;
     }
 
-    console.log('✅ CEP encontrado:', data);
     return data;
   } catch (error) {
     console.error('💥 Erro ao buscar CEP:', error);

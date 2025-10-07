@@ -17,6 +17,12 @@ interface CheckoutFormData {
  * Remove formatação do telefone (XX) XXXXX-XXXX → 5567984299967
  */
 export function sanitizePhone(phone: string): string {
+  // Se o telefone contém asteriscos (mascarado), retorna como está
+  // A API saberá lidar com telefones mascarados
+  if (phone.includes('*')) {
+    return phone;
+  }
+  
   // Remove todos os caracteres não numéricos
   const numbers = phone.replace(/\D/g, '');
   
@@ -103,7 +109,11 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
   const errors: string[] = [];
 
   // Validar customer
-  if (!payload.customer.phone || payload.customer.phone.length < 12) {
+  // Se o telefone tem asteriscos (mascarado), aceita - a API vai processar
+  if (!payload.customer.phone) {
+    errors.push('Telefone é obrigatório');
+  } else if (!payload.customer.phone.includes('*') && payload.customer.phone.length < 12) {
+    // Só valida comprimento se NÃO for mascarado
     errors.push('Telefone inválido');
   }
 

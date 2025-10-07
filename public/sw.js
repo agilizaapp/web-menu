@@ -2,13 +2,11 @@
 // SEM cache offline - sempre busca da rede
 
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Instalado');
   // Ativa imediatamente sem esperar
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Ativado');
   // Toma controle imediatamente
   event.waitUntil(clients.claim());
 });

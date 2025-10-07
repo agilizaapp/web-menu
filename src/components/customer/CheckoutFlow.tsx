@@ -37,7 +37,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [isReturningCustomer, setIsReturningCustomer] = useState(false);
 
   // Verificar se o cliente já está autenticado (dados já vieram da requisição inicial)
+  // IMPORTANTE: Executar apenas no início, não durante o fluxo de pagamento
   useEffect(() => {
+    // Se já está em payment, não interferir
+    if (currentFlow === "payment") {
+      setIsLoadingAuth(false);
+      return;
+    }
+
     if (isAuthenticated && token && name && phone) {
       // Cliente já autenticado - dados vieram da requisição /product?config=true
       setCustomerData({
