@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RegisterModals } from "./RegisterModals";
 import { CheckoutPage } from "./CheckoutPage";
 import { PaymentFlow } from "./PaymentFlow";
 import { AddressData } from "@/types";
+import { useCustomerStore } from "@/stores";
+import { apiService } from "@/services/api";
+import { toast } from "sonner";
 
 interface CheckoutFlowProps {
   onOrderComplete: (orderId: string) => void;
@@ -13,6 +16,7 @@ interface CustomerData {
   phone: string;
   name: string;
   birthDate: string;
+  isExistingCustomer?: boolean;
 }
 
 interface CheckoutData {
@@ -25,12 +29,36 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onOrderComplete,
   onBack,
 }) => {
+  const { token, name, phone, address, isAuthenticated, setCustomer } = useCustomerStore();
   const [currentFlow, setCurrentFlow] = useState<"register" | "checkout" | "payment">("register");
   const [customerData, setCustomerData] = useState<CustomerData | null>(null);
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isReturningCustomer, setIsReturningCustomer] = useState(false);
+
+  // Verificar se o cliente já está autenticado (dados já vieram da requisição inicial)
+  useEffect(() => {
+    if (isAuthenticated && token && name && phone) {
+      // Cliente já autenticado - dados vieram da requisição /product?config=true
+      setCustomerData({
+        name,
+        phone,
+        birthDate: "", // Não temos esta informação
+      });
+      
+      setIsReturningCustomer(true);
+      setCurrentFlow("checkout");
+    } else {
+      // Não autenticado - ir para modal de registro
+      setCurrentFlow("register");
+    }
+    
+    setIsLoadingAuth(false);
+  }, [isAuthenticated, token, name, phone]);
 
   const handleRegisterComplete = (data: CustomerData) => {
     setCustomerData(data);
+    setIsReturningCustomer(data.isExistingCustomer || false);
     setCurrentFlow("checkout");
   };
 
@@ -51,28 +79,40 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   return (
     <>
-      {currentFlow === "register" && (
-        <RegisterModals 
-          onComplete={handleRegisterComplete}
-          onClose={onBack}
-        />
-      )}
+      {isLoadingAuth ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {currentFlow === "register" && (
+            <RegisterModals 
+              onComplete={handleRegisterComplete}
+              onClose={onBack}
+            />
+          )}
 
-      {currentFlow === "checkout" && customerData && (
-        <CheckoutPage
-          customerData={customerData}
-          onBack={handleBackFromCheckout}
-          onProceedToPayment={handleCheckoutComplete}
-        />
-      )}
+          {currentFlow === "checkout" && customerData && (
+            <CheckoutPage
+              customerData={customerData}
+              isReturningCustomer={isReturningCustomer}
+              onBack={handleBackFromCheckout}
+              onProceedToPayment={handleCheckoutComplete}
+            />
+          )}
 
-      {currentFlow === "payment" && customerData && checkoutData && (
-        <PaymentFlow
-          customerData={customerData}
-          checkoutData={checkoutData}
-          onBack={handleBackFromPayment}
-          onOrderComplete={onOrderComplete}
-        />
+          {currentFlow === "payment" && customerData && checkoutData && (
+            <PaymentFlow
+              customerData={customerData}
+              checkoutData={checkoutData}
+              onBack={handleBackFromPayment}
+              onOrderComplete={onOrderComplete}
+            />
+          )}
+        </>
       )}
     </>
   );

@@ -16,6 +16,19 @@ interface CustomerData {
   address?: AddressData;
 }
 
+export interface CustomerResponse {
+  name: string;
+  phone: string;
+  address?: AddressData | null;
+}
+
+export interface ConfigResponse {
+  store: Record<string, unknown>;
+  customer: CustomerResponse;
+  categories?: unknown[];
+  [key: string]: unknown; // Permite outros campos dinâmicos
+}
+
 interface OrderModifier {
   modifier_id: string;
   option_id: string;
@@ -54,6 +67,74 @@ interface CreateOrderResponse {
 }
 
 export const apiService = {
+  /**
+   * Busca configuração com dados do cliente autenticado
+   * Requisição inicial que traz produtos/cardápio e, se autenticado, dados do cliente
+   */
+  async getConfig(token?: string): Promise<ConfigResponse> {
+    try {
+      const url = `${API_BASE_URL}/product?config=true`;
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error!`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching config:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Busca dados do cliente por telefone
+   */
+  async getCustomerByPhone(phone: string): Promise<CustomerResponse | null> {
+    try {
+      const url = `${API_BASE_URL}/customer/${phone}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 404) {
+        return null; // Cliente não encontrado
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error!`);
+      }
+
+      const data = await response.json();
+      
+      // A API pode retornar {customer: {...}} ou {...} diretamente
+      if (data.customer) {
+        return data.customer;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+      throw error;
+    }
+  },
+
   /**
    * Cria um novo pedido
    */

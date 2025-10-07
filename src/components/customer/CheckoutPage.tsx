@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useCartStore, useRestaurantStore } from "@/stores";
+import { useCartStore, useRestaurantStore, useCustomerStore } from "@/stores";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import type { AddressData } from "@/types";
 import { fetchAddressByCEP, formatCEP, isValidCEP } from "@/services/viaCEP";
+import { cookieService } from "@/services/cookies";
 import { toast } from "sonner";
 
 interface CustomerData {
@@ -20,6 +21,7 @@ interface CustomerData {
 
 interface CheckoutPageProps {
   customerData: CustomerData;
+  isReturningCustomer?: boolean;
   onBack: () => void;
   onProceedToPayment: (data: {
     deliveryType: "delivery" | "pickup";
@@ -30,11 +32,13 @@ interface CheckoutPageProps {
 
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   customerData,
+  isReturningCustomer = false,
   onBack,
   onProceedToPayment,
 }) => {
   const { cart, getTotalCartPrice, clearCart, updateCartItem, removeFromCart } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
+  const { clearCustomer } = useCustomerStore();
 
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
   const [addressData, setAddressData] = useState<AddressData>({
@@ -53,6 +57,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const finalTotal = cartTotal + deliveryFee;
 
   const restaurantAddress = currentRestaurant?.settings?.address || "Rua Exemplo, 123 - Centro";
+
+  const handleLogout = () => {
+    cookieService.removeCustomerToken();
+    clearCustomer();
+    toast.success("Logout realizado com sucesso");
+    onBack();
+  };
 
   const validateAddressField = (field: keyof AddressData, value: string): string => {
     switch (field) {
@@ -186,11 +197,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <Button variant="ghost" size="icon" onClick={onBack}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-xl font-bold">Finalizar Pedido</h1>
-              <p className="text-sm text-muted-foreground">
-                Olá, {customerData.name.split(" ")[0]}!
-              </p>
+            <div className="flex-1 flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold">Finalizar Pedido</h1>
+                <p className="text-sm text-muted-foreground">
+                  Olá, {customerData.name.split(" ")[0]}!
+                </p>
+              </div>
+              {isReturningCustomer && (
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-muted-foreground hover:text-foreground underline transition-colors"
+                >
+                  Não é você?
+                </button>
+              )}
             </div>
           </div>
         </div>

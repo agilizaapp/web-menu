@@ -10,12 +10,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Phone, User, Calendar, X, ArrowLeft } from "lucide-react";
+import { Phone, User, Calendar, X, ArrowLeft, Loader2 } from "lucide-react";
+import { apiService } from "@/services/api";
+import { sanitizePhone } from "@/utils/orderUtils";
+import { toast } from "sonner";
 
 interface CustomerData {
   phone: string;
   name: string;
   birthDate: string;
+  isExistingCustomer?: boolean;
 }
 
 interface RegisterModalsProps {
@@ -34,6 +38,12 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
     phone: "",
     name: "",
   });
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
+  const [existingCustomer, setExistingCustomer] = useState<{
+    name: string;
+    phone: string;
+  } | null>(null);
+  const [lastCheckedPhone, setLastCheckedPhone] = useState<string>("");
 
   // Máscara de telefone (XX) XXXXX-XXXX
   const formatPhone = (value: string): string => {
@@ -87,11 +97,60 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
     return age >= 0 && age <= 120;
   };
 
-  const handlePhoneChange = (value: string) => {
+  const handlePhoneChange = async (value: string) => {
     const formatted = formatPhone(value);
     setCustomerData((prev) => ({ ...prev, phone: formatted }));
     if (errors.phone) {
       setErrors((prev) => ({ ...prev, phone: validatePhone(formatted) }));
+    }
+
+    // Buscar cliente automaticamente APENAS se tiver 11 dígitos (celular)
+    const numbers = formatted.replace(/\D/g, "");
+    if (numbers.length === 11) {
+      await checkCustomerByPhone(formatted);
+    } else {
+      // Limpar dados do cliente existente se telefone incompleto ou com 10 dígitos
+      setExistingCustomer(null);
+      setLastCheckedPhone("");
+    }
+  };
+
+  const checkCustomerByPhone = async (phone: string) => {
+    const phoneError = validatePhone(phone);
+    if (phoneError) return;
+
+    // Evitar requisições duplicadas para o mesmo telefone
+    if (lastCheckedPhone === phone) {
+      return;
+    }
+
+    setIsCheckingPhone(true);
+    setLastCheckedPhone(phone);
+
+    try {
+      const sanitized = sanitizePhone(phone);
+      const customer = await apiService.getCustomerByPhone(sanitized);
+
+      if (customer) {
+        setExistingCustomer(customer);
+        toast.success(`Encontramos seu cadastro, ${customer.name}!`);
+        
+        // Ir direto para o checkout sem precisar clicar em continuar
+        const completeData: CustomerData = {
+          phone: phone,
+          name: customer.name,
+          birthDate: "",
+          isExistingCustomer: true,
+        };
+        onComplete(completeData);
+      } else {
+        setExistingCustomer(null);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar cliente:', error);
+      setExistingCustomer(null);
+    } finally {
+      setIsCheckingPhone(false);
     }
   };
 
@@ -109,7 +168,7 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
     setCustomerData((prev) => ({ ...prev, birthDate: value }));
   };
 
-  const handleStep1Submit = () => {
+  const handleStep1Submit = async () => {
     const phoneError = validatePhone(customerData.phone);
     
     if (phoneError) {
@@ -117,7 +176,56 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
       return;
     }
 
-    setCurrentStep(2);
+    // Se já checou e encontrou cliente, pular para completar
+    if (existingCustomer) {
+      const completeData: CustomerData = {
+        phone: customerData.phone,
+        name: existingCustomer.name,
+        birthDate: "",
+        isExistingCustomer: true,
+      };
+      onComplete(completeData);
+      return;
+    }
+
+    // Se já fez a verificação (lastCheckedPhone está setado), não verificar novamente
+    if (lastCheckedPhone === customerData.phone) {
+      // Novo cliente - ir para próximo modal
+      toast.info("Novo cliente! Por favor, preencha seus dados.");
+      setCurrentStep(2);
+      return;
+    }
+
+    // Se não checou ainda (ex: telefone de 10 dígitos), checar agora
+    setIsCheckingPhone(true);
+
+    try {
+      const sanitized = sanitizePhone(customerData.phone);
+      const customer = await apiService.getCustomerByPhone(sanitized);
+      setLastCheckedPhone(customerData.phone);
+      
+      if (customer) {
+        // Cliente encontrado - completar diretamente
+        const completeData: CustomerData = {
+          phone: customerData.phone,
+          name: customer.name,
+          birthDate: "",
+          isExistingCustomer: true,
+        };
+        onComplete(completeData);
+        return;
+      }
+
+      // Novo cliente - ir para próximo modal
+      toast.info("Novo cliente! Por favor, preencha seus dados.");
+      setCurrentStep(2);
+    } catch (error) {
+      console.error('Erro ao buscar cliente:', error);
+      // Continua para próximo passo mesmo com erro
+      setCurrentStep(2);
+    } finally {
+      setIsCheckingPhone(false);
+    }
   };
 
   const handleStep2Submit = () => {
@@ -132,7 +240,7 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
       return;
     }
 
-    onComplete(customerData);
+    onComplete({ ...customerData, isExistingCustomer: false });
   };
 
   return (
@@ -197,8 +305,16 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
               onClick={handleStep1Submit}
               className="w-full"
               style={{ backgroundColor: "var(--restaurant-primary)" }}
+              disabled={isCheckingPhone}
             >
-              Continuar
+              {isCheckingPhone ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verificando...
+                </>
+              ) : (
+                'Continuar'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

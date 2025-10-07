@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AdminApp } from '@/components/AdminApp';
 import { useRestaurantStore } from '@/stores/restaurantStore';
+import { useCustomerStore } from '@/stores';
+import { cookieService } from '@/services/cookies';
 import { RestaurantsService } from '@/services/restaurant.service';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/utils/api-error';
@@ -21,6 +23,7 @@ export default function Page() {
   const [appMode, setAppMode] = useState<AppMode>('customer');
   const [isLoading, setIsLoading] = useState(true);
   const { currentRestaurant, setCurrentRestaurant } = useRestaurantStore();
+  const { setCustomer } = useCustomerStore();
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -71,6 +74,21 @@ export default function Page() {
           };
 
           setCurrentRestaurant(restaurantData);
+
+          // Se a API retornou dados do customer, salvar no store
+          if (restaurant.customer) {
+            const token = cookieService.getCustomerToken();
+            if (token) {
+              setCustomer({
+                token,
+                name: restaurant.customer.name,
+                phone: restaurant.customer.phone,
+                address: restaurant.customer.address || undefined,
+              });
+              toast.success(`Bem-vindo de volta, ${restaurant.customer.name}!`);
+            }
+          }
+
           setIsLoading(false);
         } else {
           toast.error('Erro ao carregar dados do restaurante');
@@ -86,7 +104,7 @@ export default function Page() {
     };
 
     fetchRestaurant();
-  }, [setCurrentRestaurant]);
+  }, [setCurrentRestaurant, setCustomer]);
 
   // Loading state
   if (isLoading) {
@@ -136,7 +154,7 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {!currentRestaurant ? (
         <RestaurantSelector onSelectMode={setAppMode} />
       ) : ( <></> )}

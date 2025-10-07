@@ -42,6 +42,17 @@ export interface IGetAllProductsApiResponse {
   products: MenuItem[];
   store?: IStoreConfigs;
   categories?: MenuCategory[] | string[];
+  customer?: {
+    name: string;
+    phone: string;
+    address?: {
+      street: string;
+      number: string;
+      neighborhood: string;
+      postalCode: string;
+      complement?: string;
+    } | null;
+  };
 }
 export interface IStoreConfigs {
   name: string;

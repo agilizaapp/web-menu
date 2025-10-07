@@ -14,10 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useCartStore, useRestaurantStore, useOrderStore } from "@/stores";
+import { useCartStore, useRestaurantStore, useOrderStore, useCustomerStore } from "@/stores";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { createOrderPayload, validateOrderPayload } from "@/utils/orderUtils";
+import { cookieService } from "@/services/cookies";
 import type { AddressData } from "@/types";
 
 interface CustomerData {
@@ -48,6 +49,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   const { cart, getTotalCartPrice, clearCart } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
   const { addOrder } = useOrderStore();
+  const { setCustomer } = useCustomerStore();
 
   // useRef para garantir execução única (protege contra React.StrictMode)
   const orderCreationAttempted = useRef(false);
@@ -117,6 +119,17 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         const orderId = `order-${apiOrderId}`;
         const apiToken = response.data.token;
         const pixCodeFromAPI = response.data.pix?.copyAndPaste;
+
+        // ✅ Salvar token no cookie (1 ano)
+        cookieService.setCustomerToken(apiToken);
+
+        // ✅ Salvar dados do cliente na store
+        setCustomer({
+          token: apiToken,
+          name: customerData.name,
+          phone: customerData.phone,
+          address: typeof checkoutData.address === 'object' ? checkoutData.address : undefined,
+        });
 
         setOrderData({
           orderId,
@@ -219,6 +232,17 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         const apiOrderId = response.data.orderId;
         const orderId = `order-${apiOrderId}`;
         const apiToken = response.data.token;
+
+        // ✅ Salvar token no cookie (1 ano)
+        cookieService.setCustomerToken(apiToken);
+
+        // ✅ Salvar dados do cliente na store
+        setCustomer({
+          token: apiToken,
+          name: customerData.name,
+          phone: customerData.phone,
+          address: typeof checkoutData.address === 'object' ? checkoutData.address : undefined,
+        });
 
         finalOrderData = {
           orderId,
