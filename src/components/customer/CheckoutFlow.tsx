@@ -52,7 +52,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   return (
     <>
       {currentFlow === "register" && (
-        <RegisterModals onComplete={handleRegisterComplete} />
+        <RegisterModals 
+          onComplete={handleRegisterComplete}
+          onClose={onBack}
+        />
       )}
 
       {currentFlow === "checkout" && customerData && (

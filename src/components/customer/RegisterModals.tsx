@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Phone, User, Calendar } from "lucide-react";
+import { Phone, User, Calendar, X, ArrowLeft } from "lucide-react";
 
 interface CustomerData {
   phone: string;
@@ -20,9 +20,10 @@ interface CustomerData {
 
 interface RegisterModalsProps {
   onComplete: (data: CustomerData) => void;
+  onClose?: () => void;
 }
 
-export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete }) => {
+export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onClose }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [customerData, setCustomerData] = useState<CustomerData>({
     phone: "",
@@ -139,6 +140,17 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete }) =>
       {/* Modal 1 - Telefone */}
       <Dialog open={currentStep === 1} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fechar</span>
+            </Button>
+          )}
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Phone className="w-5 h-5" />
@@ -251,6 +263,7 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete }) =>
               onClick={() => setCurrentStep(1)}
               className="flex-1"
             >
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
             <Button

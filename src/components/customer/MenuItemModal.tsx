@@ -118,7 +118,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                 <h2 className="text-2xl font-semibold">{item.name}</h2>
                 <Badge variant="secondary">{item.category}</Badge>
               </div>
-              <p className="text-muted-foreground mb-3">{item.description}</p>
+              <p className="text-foreground/70 mb-3">{item.description}</p>
               <div className="text-xl font-semibold" style={{ color: 'var(--restaurant-primary)' }}>
                 R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
@@ -130,7 +130,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                 <div className="flex items-center gap-2 mb-3">
                   <h3 className="font-medium">{modifier.name}</h3>
                   {modifier.required && (
-                    <Badge variant="destructive" className="text-xs">Required</Badge>
+                    <Badge variant="destructive" className="text-xs">Obrigatório</Badge>
                   )}
                 </div>
 
@@ -146,8 +146,8 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                           <Label htmlFor={option.id}>{option.name}</Label>
                         </div>
                         {option.price > 0 && (
-                          <span className="text-sm text-muted-foreground">
-                            +${option.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <span className="text-sm font-medium text-foreground/80">
+                            +R$ {option.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         )}
                       </div>
@@ -168,8 +168,8 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                           <Label htmlFor={option.id}>{option.name}</Label>
                         </div>
                         {option.price > 0 && (
-                          <span className="text-sm text-muted-foreground">
-                            +${option.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <span className="text-sm font-medium text-foreground/80">
+                            +R$ {option.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         )}
                       </div>
@@ -203,7 +203,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
               <Button
                 onClick={handleAddToCart}
                 disabled={!canAddToCart()}
-                className="px-4"
+                className="px-4 text-white font-semibold"
                 style={{ backgroundColor: 'var(--restaurant-primary)' }}
               >
                 Adicionar ao carrinho - R$ {(totalPrice * quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

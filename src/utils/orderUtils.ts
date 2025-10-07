@@ -10,6 +10,7 @@ interface CustomerFormData {
 interface CheckoutFormData {
   deliveryType: 'delivery' | 'pickup';
   address: AddressData | string;
+  paymentMethod: 'pix' | 'card';
 }
 
 /**
@@ -74,6 +75,8 @@ export function createOrderPayload(
     },
     order: {
       items: cartItems.map(convertCartItemToOrderItem),
+      payment_method: checkoutData.paymentMethod === 'pix' ? 'pix' : 'credit_card',
+      delivery: checkoutData.deliveryType === 'delivery',
     },
   };
 

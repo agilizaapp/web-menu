@@ -15,7 +15,15 @@ self.addEventListener('activate', (event) => {
 
 // Estratégia: Network Only (sempre busca da rede, sem fallback)
 self.addEventListener('fetch', (event) => {
-  // Simplesmente deixa a requisição passar normalmente
-  // Não faz cache, não interfere - apenas permite a instalação PWA
+  // NÃO intercepta requisições de API para evitar duplicação
+  // Apenas permite navegação para que o PWA funcione
+  const url = new URL(event.request.url);
+  
+  // Se for requisição de API (localhost:3001 ou outras APIs), ignora completamente
+  if (url.hostname === 'localhost' && url.port === '3001') {
+    return; // Deixa o browser fazer a requisição normalmente
+  }
+  
+  // Para outras requisições, simplesmente passa adiante sem cache
   event.respondWith(fetch(event.request));
 });

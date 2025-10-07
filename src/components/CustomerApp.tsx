@@ -34,7 +34,7 @@ export const CustomerApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {currentView === 'menu' && (
         <>
           <MenuPage onStartCheckout={() => setCurrentView('checkout')} />

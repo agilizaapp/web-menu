@@ -31,6 +31,8 @@ interface CreateOrderPayload {
   customer: CustomerData;
   order: {
     items: OrderItem[];
+    payment_method: 'pix' | 'credit_card';
+    delivery: boolean;
   };
 }
 
