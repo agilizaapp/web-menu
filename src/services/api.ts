@@ -10,8 +10,8 @@ export interface AddressData {
 }
 
 interface CustomerData {
-  phone: string;
-  name: string;
+  phone?: string;
+  name?: string;
   birthdate?: string;
   address?: AddressData;
 }
@@ -41,7 +41,8 @@ interface OrderItem {
 }
 
 interface CreateOrderPayload {
-  customer: CustomerData;
+  customer?: CustomerData; // Dados completos (novo cliente)
+  token?: string; // Token de autenticação (cliente existente)
   order: {
     items: OrderItem[];
     payment_method: 'pix' | 'credit_card';
@@ -138,15 +139,20 @@ export const apiService = {
   /**
    * Cria um novo pedido
    */
-  async createOrder(payload: CreateOrderPayload): Promise<CreateOrderResponse> {
+  async createOrder(payload: CreateOrderPayload, customerToken?: string): Promise<CreateOrderResponse> {
     try {
       const url = `${API_BASE_URL}/order`;
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (customerToken) {
+        headers['Authorization'] = `Bearer ${customerToken}`;
+      }
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 

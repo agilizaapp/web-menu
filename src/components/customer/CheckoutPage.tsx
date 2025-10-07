@@ -38,7 +38,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 }) => {
   const { cart, getTotalCartPrice, clearCart, updateCartItem, removeFromCart } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
-  const { clearCustomer } = useCustomerStore();
+  const { clearCustomer, address: savedAddress } = useCustomerStore();
 
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
   const [addressData, setAddressData] = useState<AddressData>({
@@ -51,6 +51,20 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
   const [addressErrors, setAddressErrors] = useState<Partial<Record<keyof AddressData, string>>>({});
   const [isLoadingCEP, setIsLoadingCEP] = useState(false);
+
+  // Preencher endereço automaticamente se vier do store (cliente autenticado com endereço salvo)
+  useEffect(() => {
+    if (savedAddress) {
+      setAddressData({
+        street: savedAddress.street || "",
+        number: savedAddress.number || "",
+        neighborhood: savedAddress.neighborhood || "",
+        postalCode: savedAddress.postalCode || "",
+        complement: savedAddress.complement || "",
+      });
+      toast.success("Endereço carregado automaticamente!");
+    }
+  }, [savedAddress]);
 
   const cartTotal = getTotalCartPrice();
   const deliveryFee = deliveryType === "delivery" ? (currentRestaurant?.settings?.deliveryFee || 0) : 0;
@@ -80,6 +94,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return "";
       case 'postalCode':
         if (!value.trim()) return "CEP é obrigatório";
+        // Se tem asterisco (mascarado), não valida comprimento
+        if (value.includes('*')) return "";
         const numbers = value.replace(/\D/g, '');
         if (numbers.length !== 8) return "CEP deve ter 8 dígitos";
         return "";

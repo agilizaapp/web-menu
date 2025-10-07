@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Phone, User, Calendar, X, ArrowLeft, Loader2 } from "lucide-react";
 import { apiService } from "@/services/api";
 import { sanitizePhone } from "@/utils/orderUtils";
+import { useCustomerStore } from "@/stores";
 import { toast } from "sonner";
 
 interface CustomerData {
@@ -28,6 +29,7 @@ interface RegisterModalsProps {
 }
 
 export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onClose }) => {
+  const { updateAddress } = useCustomerStore();
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [customerData, setCustomerData] = useState<CustomerData>({
     phone: "",
@@ -133,7 +135,14 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
 
       if (customer) {
         setExistingCustomer(customer);
-        toast.success(`Encontramos seu cadastro, ${customer.name}!`);
+        
+        // Se o cliente tem endereço salvo, atualizar no store
+        if (customer.address) {
+          updateAddress(customer.address);
+          toast.success(`Encontramos seu cadastro e endereço, ${customer.name}!`);
+        } else {
+          toast.success(`Encontramos seu cadastro, ${customer.name}!`);
+        }
         
         // Ir direto para o checkout sem precisar clicar em continuar
         const completeData: CustomerData = {
@@ -205,6 +214,11 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
       setLastCheckedPhone(customerData.phone);
       
       if (customer) {
+        // Se o cliente tem endereço salvo, atualizar no store
+        if (customer.address) {
+          updateAddress(customer.address);
+        }
+        
         // Cliente encontrado - completar diretamente
         const completeData: CustomerData = {
           phone: customerData.phone,

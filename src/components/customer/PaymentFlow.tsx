@@ -39,6 +39,7 @@ interface PaymentFlowProps {
   checkoutData: CheckoutData;
   onBack: () => void;
   onOrderComplete: (orderId: string) => void;
+  originalAddress?: AddressData; // Endereço original do cliente (da API)
 }
 
 export const PaymentFlow: React.FC<PaymentFlowProps> = ({
@@ -46,12 +47,13 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   checkoutData,
   onBack,
   onOrderComplete,
+  originalAddress,
 }) => {
   
   const { cart, getTotalCartPrice, clearCart } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
   const { addOrder } = useOrderStore();
-  const { setCustomer } = useCustomerStore();
+  const { setCustomer, token: customerToken } = useCustomerStore();
 
   // useRef para garantir execução única (protege contra React.StrictMode)
   const orderCreationAttempted = useRef(false);
@@ -97,8 +99,12 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       
       try {
         
-        // Criar payload da API
-        const apiPayload = createOrderPayload(customerData, checkoutData, cart);
+        // Criar payload da API com token e informações de endereço
+        const apiPayload = createOrderPayload(customerData, checkoutData, cart, {
+          customerToken,
+          originalAddress,
+          currentAddress: typeof checkoutData.address === 'object' ? checkoutData.address : undefined,
+        });
 
         // Validar payload
         const validation = validateOrderPayload(apiPayload);
@@ -110,7 +116,10 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
 
 
         // Enviar para API
-        const response = await apiService.createOrder(apiPayload);
+        const response = await apiService.createOrder(
+          apiPayload,
+          customerToken as string
+        );
 
 
         if (!response.success) {
@@ -219,8 +228,12 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
       // Se for CARTÃO, criar o pedido agora
       if (checkoutData.paymentMethod === 'card' && !orderData) {
         
-        // Criar payload da API
-        const apiPayload = createOrderPayload(customerData, checkoutData, cart);
+        // Criar payload da API com token e informações de endereço
+        const apiPayload = createOrderPayload(customerData, checkoutData, cart, {
+          customerToken,
+          originalAddress,
+          currentAddress: typeof checkoutData.address === 'object' ? checkoutData.address : undefined,
+        });
 
         // Validar payload
         const validation = validateOrderPayload(apiPayload);

@@ -67,12 +67,52 @@ export function convertCartItemToOrderItem(cartItem: CartItem): OrderItem {
 
 /**
  * Cria o payload completo para enviar à API
+ * Se tiver token (cliente autenticado), envia token ao invés dos dados do customer
+ * Só envia address se foi modificado pelo usuário
  */
 export function createOrderPayload(
   customerData: CustomerFormData,
   checkoutData: CheckoutFormData,
-  cartItems: CartItem[]
+  cartItems: CartItem[],
+  options?: {
+    customerToken?: string | null;
+    originalAddress?: AddressData | null;
+    currentAddress?: AddressData;
+  }
 ): CreateOrderPayload {
+  const { customerToken, originalAddress, currentAddress } = options || {};
+
+  // Se tem token, usa autenticação por token
+  if (customerToken) {
+    const payload: CreateOrderPayload = {
+      token: customerToken, // ✅ Incluir o token!
+      order: {
+        items: cartItems.map(convertCartItemToOrderItem),
+        payment_method: checkoutData.paymentMethod === 'pix' ? 'pix' : 'credit_card',
+        delivery: checkoutData.deliveryType === 'delivery',
+      },
+    };
+
+    // Só envia customer.address se for entrega E o endereço foi modificado
+    if (checkoutData.deliveryType === 'delivery' && currentAddress) {
+      const addressWasModified = !originalAddress || 
+        originalAddress.street !== currentAddress.street ||
+        originalAddress.number !== currentAddress.number ||
+        originalAddress.neighborhood !== currentAddress.neighborhood ||
+        originalAddress.postalCode !== currentAddress.postalCode ||
+        originalAddress.complement !== currentAddress.complement;
+
+      if (addressWasModified) {
+        payload.customer = {
+          address: currentAddress,
+        };
+      }
+    }
+
+    return payload;
+  }
+
+  // Cliente novo - envia dados completos
   const payload: CreateOrderPayload = {
     customer: {
       phone: sanitizePhone(customerData.phone),
@@ -88,12 +128,9 @@ export function createOrderPayload(
 
   // Adiciona endereço somente se for entrega
   if (checkoutData.deliveryType === 'delivery') {
-    // Se for AddressData (objeto), usa diretamente
-    // Se for string (restaurantAddress), converte para objeto simples (não envia para API)
     if (typeof checkoutData.address === 'object') {
-      payload.customer.address = checkoutData.address;
+      payload.customer!.address = checkoutData.address;
     }
-    // Se for string, não adiciona ao payload (caso de retirada com endereço do restaurante)
   }
 
   return payload;
@@ -108,33 +145,61 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
 } {
   const errors: string[] = [];
 
-  // Validar customer
-  // Se o telefone tem asteriscos (mascarado), aceita - a API vai processar
-  if (!payload.customer.phone) {
-    errors.push('Telefone é obrigatório');
-  } else if (!payload.customer.phone.includes('*') && payload.customer.phone.length < 12) {
-    // Só valida comprimento se NÃO for mascarado
-    errors.push('Telefone inválido');
-  }
+  // Se tem token, validação simplificada
+  if (payload.token) {
+    // Validar apenas se tem customer.address (caso tenha sido modificado)
+    if (payload.customer?.address) {
+      const addr = payload.customer.address;
+      if (!addr.street || addr.street.trim().length < 3) {
+        errors.push('Endereço: Rua inválida');
+      }
+      if (!addr.number || addr.number.trim().length === 0) {
+        errors.push('Endereço: Número inválido');
+      }
+      if (!addr.neighborhood || addr.neighborhood.trim().length < 3) {
+        errors.push('Endereço: Bairro inválido');
+      }
+      // Se o CEP tem asterisco (mascarado), não valida
+      if (!addr.postalCode) {
+        errors.push('Endereço: CEP é obrigatório');
+      } else if (!addr.postalCode.includes('*') && addr.postalCode.replace(/\D/g, '').length !== 8) {
+        errors.push('Endereço: CEP inválido');
+      }
+    }
+  } else {
+    // Cliente novo - validação completa
+    if (!payload.customer) {
+      errors.push('Dados do cliente são obrigatórios');
+    } else {
+      // Validar telefone
+      if (!payload.customer.phone) {
+        errors.push('Telefone é obrigatório');
+      } else if (!payload.customer.phone.includes('*') && payload.customer.phone.length < 12) {
+        // Só valida comprimento se NÃO for mascarado
+        errors.push('Telefone inválido');
+      }
 
-  if (!payload.customer.name || payload.customer.name.trim().length < 3) {
-    errors.push('Nome inválido');
-  }
+      // Validar nome
+      if (!payload.customer.name || payload.customer.name.trim().length < 3) {
+        errors.push('Nome inválido');
+      }
 
-  // Validar endereço se fornecido
-  if (payload.customer.address) {
-    const addr = payload.customer.address;
-    if (!addr.street || addr.street.trim().length < 3) {
-      errors.push('Endereço: Rua inválida');
-    }
-    if (!addr.number || addr.number.trim().length === 0) {
-      errors.push('Endereço: Número inválido');
-    }
-    if (!addr.neighborhood || addr.neighborhood.trim().length < 3) {
-      errors.push('Endereço: Bairro inválido');
-    }
-    if (!addr.postalCode || addr.postalCode.replace(/\D/g, '').length !== 8) {
-      errors.push('Endereço: CEP inválido');
+      // Validar endereço se fornecido
+      if (payload.customer.address) {
+        const addr = payload.customer.address;
+        if (!addr.street || addr.street.trim().length < 3) {
+          errors.push('Endereço: Rua inválida');
+        }
+        if (!addr.number || addr.number.trim().length === 0) {
+          errors.push('Endereço: Número inválido');
+        }
+        if (!addr.neighborhood || addr.neighborhood.trim().length < 3) {
+          errors.push('Endereço: Bairro inválido');
+        }
+        if (!addr.postalCode || addr.postalCode.replace(/\D/g, '').length !== 8) {
+          errors.push('Endereço: CEP inválido');
+        }
+      }
     }
   }
 

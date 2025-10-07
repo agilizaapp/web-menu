@@ -117,6 +117,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               checkoutData={checkoutData}
               onBack={handleBackFromPayment}
               onOrderComplete={onOrderComplete}
+              originalAddress={address || undefined} // Endereço original do cliente (da API)
             />
           )}
         </>
