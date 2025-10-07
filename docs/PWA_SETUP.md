@@ -139,7 +139,7 @@ navigator.serviceWorker.getRegistrations()
 | Instalável | ✅ Sim | ✅ Sim |
 | Modo Standalone | ✅ Sim | ✅ Sim |
 | Funciona Offline | ✅ Sim | ❌ Não |
-| Cache de Assets | ✅ Sim | ❌ Não |
+| Cache de Assets | ✅ Sim | ❌ Não | 
 | Tamanho em Disco | 📦 Maior | 📦 Mínimo |
 | Complexidade | 🔧 Maior | 🔧 Mínima |
 
