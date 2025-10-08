@@ -161,6 +161,9 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
           }
         }
 
+        // ✅ Limpar carrinho imediatamente após criar pedido com sucesso
+        clearCart();
+        
         // Marcar como criado
         setOrderCreated(true);
       } catch (error) {
@@ -244,7 +247,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         }
 
         // Enviar para API
-        const response = await apiService.createOrder(apiPayload);
+        const response = await apiService.createOrder(apiPayload, customerToken as string);
 
         if (!response.success) {
           throw new Error(response.error?.message || 'Erro ao criar pedido');
@@ -273,6 +276,9 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         };
 
         setOrderData(finalOrderData);
+        
+        // ✅ Limpar carrinho imediatamente após criar pedido com sucesso (CARTÃO)
+        clearCart();
       }
 
       // Verificar se temos os dados do pedido
@@ -304,9 +310,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
 
       // Salvar no store local
       addOrder(localOrder);
-      
-      // Limpar carrinho
-      clearCart();
       
       // Navegar para página de status
       onOrderComplete(finalOrderData.orderId);

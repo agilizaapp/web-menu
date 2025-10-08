@@ -70,6 +70,7 @@ export function convertCartItemToOrderItem(cartItem: CartItem): OrderItem {
  * Se tiver token (cliente autenticado), envia token ao invés dos dados do customer
  * Só envia address se foi modificado pelo usuário
  */
+let TOKEN: string | null = null; // Variável para armazenar o token do cliente autenticado
 export function createOrderPayload(
   customerData: CustomerFormData,
   checkoutData: CheckoutFormData,
@@ -81,11 +82,12 @@ export function createOrderPayload(
   }
 ): CreateOrderPayload {
   const { customerToken, originalAddress, currentAddress } = options || {};
+  TOKEN = customerToken || null; // Atualiza a variável TOKEN com o valor do token atual
 
   // Se tem token, usa autenticação por token
-  if (customerToken) {
+  if (TOKEN) {
     const payload: CreateOrderPayload = {
-      token: customerToken, // ✅ Incluir o token!
+      // token: customerToken, // ✅ Incluir o token!
       order: {
         items: cartItems.map(convertCartItemToOrderItem),
         payment_method: checkoutData.paymentMethod === 'pix' ? 'pix' : 'credit_card',
@@ -144,19 +146,20 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
   errors: string[];
 } {
   const errors: string[] = [];
-
   // Se tem token, validação simplificada
-  if (payload.token) {
+  if (TOKEN) {
     // Validar apenas se tem customer.address (caso tenha sido modificado)
     if (payload.customer?.address) {
       const addr = payload.customer.address;
-      if (!addr.street || addr.street.trim().length < 3) {
+      
+      // Se campo tem asterisco (mascarado), não valida comprimento
+      if (!addr.street || (!addr.street.includes('*') && addr.street.trim().length < 3)) {
         errors.push('Endereço: Rua inválida');
       }
-      if (!addr.number || addr.number.trim().length === 0) {
+      if (!addr.number || (!addr.number.includes('*') && addr.number.trim().length === 0)) {
         errors.push('Endereço: Número inválido');
       }
-      if (!addr.neighborhood || addr.neighborhood.trim().length < 3) {
+      if (!addr.neighborhood || (!addr.neighborhood.includes('*') && addr.neighborhood.trim().length < 3)) {
         errors.push('Endereço: Bairro inválido');
       }
       // Se o CEP tem asterisco (mascarado), não valida
@@ -187,16 +190,20 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
       // Validar endereço se fornecido
       if (payload.customer.address) {
         const addr = payload.customer.address;
-        if (!addr.street || addr.street.trim().length < 3) {
+        
+        // Se campo tem asterisco (mascarado), não valida
+        if (!addr.street || (!addr.street.includes('*') && addr.street.trim().length < 3)) {
           errors.push('Endereço: Rua inválida');
         }
-        if (!addr.number || addr.number.trim().length === 0) {
+        if (!addr.number || (!addr.number.includes('*') && addr.number.trim().length === 0)) {
           errors.push('Endereço: Número inválido');
         }
-        if (!addr.neighborhood || addr.neighborhood.trim().length < 3) {
+        if (!addr.neighborhood || (!addr.neighborhood.includes('*') && addr.neighborhood.trim().length < 3)) {
           errors.push('Endereço: Bairro inválido');
         }
-        if (!addr.postalCode || addr.postalCode.replace(/\D/g, '').length !== 8) {
+        if (!addr.postalCode) {
+          errors.push('Endereço: CEP é obrigatório');
+        } else if (!addr.postalCode.includes('*') && addr.postalCode.replace(/\D/g, '').length !== 8) {
           errors.push('Endereço: CEP inválido');
         }
       }

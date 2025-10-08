@@ -33,7 +33,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
   const cartTotal = getTotalCartPrice();
   const deliveryFee = currentRestaurant?.settings?.deliveryFee || 0;
   const tax = cartTotal * 0.1; // 10% tax
-  const finalTotal = cartTotal + deliveryFee + tax;
+  const finalTotal = cartTotal + deliveryFee;
 
   const handleCheckout = () => {
     setIsOpen(false);

@@ -80,6 +80,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   const validateAddressField = (field: keyof AddressData, value: string): string => {
+    // Se o valor tem asterisco (mascarado), aceita sem validar
+    if (value && value.includes('*')) return "";
+    
     switch (field) {
       case 'street':
         if (!value.trim()) return "Rua é obrigatória";
@@ -94,8 +97,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return "";
       case 'postalCode':
         if (!value.trim()) return "CEP é obrigatório";
-        // Se tem asterisco (mascarado), não valida comprimento
-        if (value.includes('*')) return "";
         const numbers = value.replace(/\D/g, '');
         if (numbers.length !== 8) return "CEP deve ter 8 dígitos";
         return "";

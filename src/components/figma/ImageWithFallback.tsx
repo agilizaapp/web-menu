@@ -13,7 +13,11 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
 
   const { src, alt, style, className, width, height, ...rest } = props;
 
-  return didError ? (
+  // Validar se src é válido (não vazio, não undefined, não null)
+  const isValidSrc = src && typeof src === 'string' && src.trim() !== '';
+  const imageSrc = isValidSrc ? src : ERROR_IMG_SRC;
+
+  return didError || !isValidSrc ? (
     <div
       className={`inline-block bg-gray-100 text-center align-middle ${className ?? ''}`}
       style={style}
@@ -36,7 +40,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     </div>
   ) : (
     <Image
-      src={typeof src === 'string' ? src : ERROR_IMG_SRC}
+      src={imageSrc}
       alt={alt ?? ''}
       width={357}
       height={268}

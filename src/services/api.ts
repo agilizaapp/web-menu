@@ -147,7 +147,7 @@ export const apiService = {
       };
 
       if (customerToken) {
-        headers['Authorization'] = `Bearer ${customerToken}`;
+        headers['Authorization'] = `${customerToken}`;
       }
 
       const response = await fetch(url, {
