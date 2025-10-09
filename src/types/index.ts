@@ -1,4 +1,5 @@
-export * from './api.types';
+export * from './restaurant/api.types';
+export * from './admin/api.types';
 export * from './entities.types';
 
 import type { MenuItem } from './entities.types';

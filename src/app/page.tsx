@@ -1,20 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AdminApp } from '@/components/AdminApp';
 import { useRestaurantStore } from '@/stores/restaurantStore';
 import { useCustomerStore } from '@/stores';
 import { cookieService } from '@/services/cookies';
-import { RestaurantsService } from '@/services/restaurant.service';
+import { RestaurantsService } from '@/services/restaurant/restaurant.service';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/utils/api-error';
-import { MenuPage } from '@/components/customer/MenuPage';
 import type { MenuItem } from '@/types/entities.types';
 import { CustomerApp } from '@/components/CustomerApp';
 
 /* mock */
 import { RestaurantSelector } from '@/components/RestaurantSelector';
-import { mockRestaurants, mockRestaurantData } from '@/data/mockData';
+// import { mockRestaurants, mockRestaurantData } from '@/data/mockData';
 import { LoaderCircle } from 'lucide-react';
 
 type AppMode = 'customer' | 'admin';
@@ -176,7 +174,6 @@ export default function Page() {
       {appMode === 'customer' ? (
         <CustomerApp />
       ) : (
-        // <AdminApp />
         <></>
       )}
     </div>
