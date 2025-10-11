@@ -69,9 +69,9 @@ export interface Order {
     address: string | AddressData;
   };
   deliveryType: 'delivery' | 'pickup';
-  status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivered' | 'rejected';
+  status: 'pending' | 'confirmed' | 'in_progress' | 'prepared' | 'finished' | 'cancelled';
   totalAmount: number;
-  createdAt: Date | string; // Can be string when deserialized from localStorage
+  createdAt: Date | string;
   paymentMethod: 'pix' | 'card';
   paymentStatus: 'pending' | 'completed' | 'failed';
   pixCode?: string; // Código PIX retornado pela API

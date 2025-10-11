@@ -41,6 +41,10 @@ export interface IOrderItemModifier {
 }
 
 export interface IOrderItem {
+  name: string;
+  description: string;
+  category: string;
+  price: number;
   product_id: number;
   quantity: number;
   modifiers?: IOrderItemModifier[];
@@ -68,11 +72,10 @@ export interface IOrderCustomer {
 
 export type OrderStatus =
   | 'pending'
-  | 'accepted'
-  | 'preparing'
-  | 'ready'
-  | 'delivered'
-  | 'rejected'
+  | 'confirmed'
+  | 'in_progress'
+  | 'prepared'
+  | 'finished'
   | 'cancelled';
 
 export type PaymentMethod =

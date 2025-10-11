@@ -1,4 +1,3 @@
-// src/lib/mappers/order.mapper.ts
 import type { IOrderApi, IOrderAddress, IOrderItem } from '@/types/admin/api.types';
 import type { Order, CartItem, AddressData } from '@/types';
 import type { MenuItem } from '@/types/entities.types';

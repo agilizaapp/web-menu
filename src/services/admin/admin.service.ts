@@ -1,11 +1,19 @@
 import { apiClient } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/admin/config';
-import type { IGetAllOrdersApiResponse } from '@/types/admin/api.types';
+import type { IGetAllOrdersApiResponse, OrderStatus } from '@/types/admin/api.types';
 
 export class AdminService {
   static async getAllOrders(config?: boolean): Promise<IGetAllOrdersApiResponse> {
     const { data } = await apiClient.get<IGetAllOrdersApiResponse>(
       API_ENDPOINTS.orders.listAll(config)
+    );
+    return data;
+  }
+
+  static async updateOrderStatus(orderId: number, newStatus: OrderStatus): Promise<any> {
+    const { data } = await apiClient.put<IGetAllOrdersApiResponse>(
+      API_ENDPOINTS.orders.updateStatus(orderId),
+      { status: newStatus }
     );
     return data;
   }
