@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api/client';
-import { API_ENDPOINTS } from '@/lib/api/config';
+import { API_ENDPOINTS } from '@/lib/api/restaurant/config-restaurant';
 import type { Restaurant, Menu, MenuItem } from '@/types/entities.types';
-import type { ApiResponse, IGetProductByIdStoreApiResponse, IGetAllProductsApiResponse } from '@/types/api.types';
+import type { ApiResponse, IGetProductByIdStoreApiResponse, IGetAllProductsApiResponse } from '@/types/restaurant/api.types';
 
 export class RestaurantsService {
   static async getAllProducts(config?: boolean): Promise<IGetAllProductsApiResponse> {
