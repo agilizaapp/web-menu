@@ -102,24 +102,39 @@ export const AdminApp: React.FC = () => {
             </TabsList>
           )}
 
-          <TabsContent value="orders" className="space-y-6">
-            <OrderManagement />
+          {/* ✅ ATUALIZADO: forceMount mantém componentes montados */}
+          <TabsContent value="orders" className="space-y-6" forceMount>
+            <div className={activeTab === 'orders' ? 'block' : 'hidden'}>
+              <OrderManagement />
+            </div>
           </TabsContent>
 
-          {isDemoMode && (
+          {isDemoMode ? (
             <>
-              <TabsContent value="menu" className="space-y-6">
-                <MenuManagement />
+              <TabsContent value="menu" className="space-y-6" forceMount>
+                <div className={activeTab === 'menu' ? 'block' : 'hidden'}>
+                  <MenuManagement />
+                </div>
               </TabsContent>
 
-              <TabsContent value="settings" className="space-y-6">
-                <SettingsPanel />
+              <TabsContent value="settings" className="space-y-6" forceMount>
+                <div className={activeTab === 'settings' ? 'block' : 'hidden'}>
+                  <SettingsPanel />
+                </div>
               </TabsContent>
 
-              <TabsContent value="analytics" className="space-y-6">
-                <Analytics />
+              <TabsContent value="analytics" className="space-y-6" forceMount>
+                <div className={activeTab === 'analytics' ? 'block' : 'hidden'}>
+                  <Analytics />
+                </div>
               </TabsContent>
             </>
+          ) : (
+            <TabsContent value="menu" className="space-y-6" forceMount>
+              <div className={activeTab === 'menu' ? 'block' : 'hidden'}>
+                <MenuManagement />
+              </div>
+            </TabsContent>
           )}
         </Tabs>
       </div>
