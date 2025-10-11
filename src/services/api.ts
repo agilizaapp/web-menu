@@ -17,6 +17,7 @@ interface CustomerData {
 }
 
 export interface CustomerResponse {
+  id?: number;
   name: string;
   phone: string;
   address?: AddressData | null;
@@ -27,6 +28,16 @@ export interface ConfigResponse {
   customer: CustomerResponse;
   categories?: unknown[];
   [key: string]: unknown; // Permite outros campos dinâmicos
+}
+
+export interface ReorderResponse {
+  token: string;
+  customer: {
+    id: number;
+    name: string;
+    phone: string;
+    address: AddressData;
+  };
 }
 
 interface OrderModifier {
@@ -41,8 +52,7 @@ interface OrderItem {
 }
 
 interface CreateOrderPayload {
-  customer?: CustomerData; // Dados completos (novo cliente)
-  token?: string; // Token de autenticação (cliente existente)
+  customer?: CustomerData | { address: AddressData }; // CustomerData completo (novo cliente) ou apenas {address} (token)
   order: {
     items: OrderItem[];
     payment_method: 'pix' | 'credit_card';
@@ -176,6 +186,32 @@ export const apiService = {
       return data;
     } catch (error) {
       console.error('💥 Error creating order:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Busca dados do pedido para recompra
+   */
+  async getReorderData(orderId: number): Promise<ReorderResponse> {
+    try {
+      const url = `${API_BASE_URL}/order/${orderId}/reorder`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching reorder data:', error);
       throw error;
     }
   },

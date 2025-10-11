@@ -3,7 +3,7 @@ import { MenuPage } from './customer/MenuPage';
 import { CartSheet } from './customer/CartSheet';
 import { CheckoutFlow } from './customer/CheckoutFlow';
 import { OrderStatus } from './customer/OrderStatus';
-import { useRestaurantStore } from '@/stores';
+import { useRestaurantStore, useCartStore } from '@/stores';
 
 type CustomerView = 'menu' | 'checkout' | 'order-status';
 
@@ -11,6 +11,7 @@ export const CustomerApp: React.FC = () => {
   const [currentView, setCurrentView] = useState<CustomerView>('menu');
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const { currentRestaurant } = useRestaurantStore();
+  const { clearCart } = useCartStore();
 
   if (!currentRestaurant) {
     return (
@@ -26,6 +27,8 @@ export const CustomerApp: React.FC = () => {
   const handleOrderComplete = (orderId: string) => {
     setCurrentOrderId(orderId);
     setCurrentView('order-status');
+    // ✅ Limpar carrinho apenas quando ir para a tela de status do pedido
+    clearCart();
   };
 
   const handleBackToMenu = () => {

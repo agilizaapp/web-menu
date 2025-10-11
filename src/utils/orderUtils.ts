@@ -67,10 +67,9 @@ export function convertCartItemToOrderItem(cartItem: CartItem): OrderItem {
 
 /**
  * Cria o payload completo para enviar à API
- * Se tiver token (cliente autenticado), envia token ao invés dos dados do customer
+ * Se tiver token (cliente autenticado ou recompra), envia token ao invés dos dados do customer
  * Só envia address se foi modificado pelo usuário
  */
-let TOKEN: string | null = null; // Variável para armazenar o token do cliente autenticado
 export function createOrderPayload(
   customerData: CustomerFormData,
   checkoutData: CheckoutFormData,
@@ -82,12 +81,10 @@ export function createOrderPayload(
   }
 ): CreateOrderPayload {
   const { customerToken, originalAddress, currentAddress } = options || {};
-  TOKEN = customerToken || null; // Atualiza a variável TOKEN com o valor do token atual
 
-  // Se tem token, usa autenticação por token
-  if (TOKEN) {
+  // Se tem token (cliente autenticado ou recompra), usa autenticação por token
+  if (customerToken) {
     const payload: CreateOrderPayload = {
-      // token: customerToken, // ✅ Incluir o token!
       order: {
         items: cartItems.map(convertCartItemToOrderItem),
         payment_method: checkoutData.paymentMethod === 'pix' ? 'pix' : 'credit_card',
@@ -105,9 +102,10 @@ export function createOrderPayload(
         originalAddress.complement !== currentAddress.complement;
 
       if (addressWasModified) {
+        // Apenas o address, sem phone, name, etc
         payload.customer = {
           address: currentAddress,
-        };
+        } as { address: AddressData };
       }
     }
 
@@ -141,13 +139,16 @@ export function createOrderPayload(
 /**
  * Valida se o payload está correto antes de enviar
  */
-export function validateOrderPayload(payload: CreateOrderPayload): {
+export function validateOrderPayload(
+  payload: CreateOrderPayload,
+  customerToken?: string | null
+): {
   isValid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
-  // Se tem token, validação simplificada
-  if (TOKEN) {
+  // Se tem token (cliente autenticado ou recompra), validação simplificada
+  if (customerToken) {
     // Validar apenas se tem customer.address (caso tenha sido modificado)
     if (payload.customer?.address) {
       const addr = payload.customer.address;
@@ -173,7 +174,8 @@ export function validateOrderPayload(payload: CreateOrderPayload): {
     // Cliente novo - validação completa
     if (!payload.customer) {
       errors.push('Dados do cliente são obrigatórios');
-    } else {
+    } else if ('phone' in payload.customer) {
+      // Tipo guard: se tem 'phone', é CustomerData completo
       // Validar telefone
       if (!payload.customer.phone) {
         errors.push('Telefone é obrigatório');

@@ -50,7 +50,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   originalAddress,
 }) => {
   
-  const { cart, getTotalCartPrice, clearCart } = useCartStore();
+  const { cart, getTotalCartPrice } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
   const { addOrder } = useOrderStore();
   const { setCustomer, token: customerToken } = useCustomerStore();
@@ -107,7 +107,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         });
 
         // Validar payload
-        const validation = validateOrderPayload(apiPayload);
+        const validation = validateOrderPayload(apiPayload, customerToken);
         if (!validation.isValid) {
           toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
           setIsLoadingOrder(false);
@@ -160,9 +160,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
             toast.error("❌ Erro: API não retornou código PIX");
           }
         }
-
-        // ✅ Limpar carrinho imediatamente após criar pedido com sucesso
-        clearCart();
         
         // Marcar como criado
         setOrderCreated(true);
@@ -239,7 +236,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         });
 
         // Validar payload
-        const validation = validateOrderPayload(apiPayload);
+        const validation = validateOrderPayload(apiPayload, customerToken);
         if (!validation.isValid) {
           toast.error(`❌ Erro na validação: ${validation.errors.join(', ')}`);
           setIsSubmitting(false);
@@ -276,9 +273,6 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
         };
 
         setOrderData(finalOrderData);
-        
-        // ✅ Limpar carrinho imediatamente após criar pedido com sucesso (CARTÃO)
-        clearCart();
       }
 
       // Verificar se temos os dados do pedido

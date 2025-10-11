@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartStore, useRestaurantStore, useCustomerStore } from "@/stores";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
+import { AddressPreview } from "./AddressPreview";
 import type { AddressData } from "@/types";
 import { fetchAddressByCEP, formatCEP, isValidCEP } from "@/services/viaCEP";
 import { cookieService } from "@/services/cookies";
@@ -51,6 +52,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
   const [addressErrors, setAddressErrors] = useState<Partial<Record<keyof AddressData, string>>>({});
   const [isLoadingCEP, setIsLoadingCEP] = useState(false);
+  const [isEditingAddress, setIsEditingAddress] = useState(false); // Novo estado
 
   // Preencher endereço automaticamente se vier do store (cliente autenticado com endereço salvo)
   useEffect(() => {
@@ -283,7 +285,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             {/* Campo de Endereço ou Endereço do Restaurante */}
             {deliveryType === "delivery" ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Se tem endereço salvo (cliente autenticado), mostrar preview */}
+                {savedAddress ? (
+                  <AddressPreview
+                    address={addressData}
+                    onAddressChange={(newAddress) => {
+                      setAddressData(newAddress);
+                      toast.success("Endereço atualizado!");
+                    }}
+                    errors={addressErrors}
+                    onValidate={validateAddressField}
+                    onEditingChange={setIsEditingAddress}
+                  />
+                ) : (
+                  // Cliente novo - mostrar inputs normalmente
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* CEP - PRIMEIRO CAMPO */}
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="postalCode">
@@ -401,6 +417,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     />
                   </div>
                 </div>
+                )}
               </div>
             ) : (
               <div className="p-4 bg-muted/50 rounded-lg space-y-1">
@@ -532,18 +549,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-4">
-              <Button variant="outline" className="flex-1" onClick={clearCart}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Limpar Carrinho
-              </Button>
-              <Button
-                className="flex-1"
-                style={{ backgroundColor: "var(--restaurant-primary)" }}
-                onClick={handleProceedToPayment}
-              >
-                Ir para Pagamento
-              </Button>
+            <div className="flex flex-col gap-2 pt-4">
+              {isEditingAddress && (
+                <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-md flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>Finalize a edição do endereço para continuar</span>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={clearCart}>
+                  <Trash2 className="w-4 h-4 mr-2 hidden md:!flex" />
+                  Limpar Carrinho
+                </Button>
+                <Button
+                  className="flex-1"
+                  style={{ backgroundColor: "var(--restaurant-primary)" }}
+                  onClick={handleProceedToPayment}
+                  disabled={isEditingAddress}
+                >
+                  Ir para Pagamento
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
