@@ -27,7 +27,7 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-3xl max-h-[90vh] p-0 gap-0 overflow-y-scroll">
         <DialogHeader className="p-6 pb-4 border-b bg-background relative">
           {/* Botão X para fechar */}
           <Button
