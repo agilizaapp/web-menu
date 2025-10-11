@@ -66,11 +66,10 @@ export interface IOrderCustomer {
 
 export type OrderStatus =
   | 'pending'
-  | 'accepted'
-  | 'preparing'
-  | 'ready'
-  | 'delivered'
-  | 'rejected'
+  | 'confirmed'
+  | 'in_progress'
+  | 'prepared'
+  | 'finished'
   | 'cancelled';
 
 export type PaymentMethod =
