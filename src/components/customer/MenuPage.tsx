@@ -9,7 +9,6 @@ import { useRestaurantStore } from '@/stores/restaurantStore';
 import { WeeklySchedule } from '@/types';
 import { MenuItem as MenuItemNewType } from "@/types/entities.types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import Image from 'next/image';
 
 interface MenuPageProps {
   onStartCheckout: () => void;
@@ -98,26 +97,26 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with Restaurant Branding */}
-      <div
-        className="sticky top-0 z-40 px-4 py-6 shadow-sm"
-        style={{ backgroundColor: "var(--restaurant-primary)", color: "white" }}
-      >
-        <div className="max-w-4xl mx-auto">
-          <div className="w-full flex flex-col items-start mb-4">
-            {/* <img className="text-3xl max-h-20" width="150" height="80" src={currentRestaurant?.theme?.logo} alt={`Logo do Restaurante ${currentRestaurant?.theme?.name}`} /> */}
-            <Image
-              src={currentRestaurant?.theme?.logo}
-              alt={`Logo ${currentRestaurant?.theme?.name}`}
-              width={150}
-              height={80}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlZWUiLz48L3N2Zz4="
-              className="relative w-[150px] h-[80px] object-contain"
-              priority
-            />
-            <div className="w-full flex-1">
-              <h1 className="text-xl font-semibold">
+      {/* Header with Restaurant Banner Background */}
+      <div className="sticky top-0 z-40 overflow-hidden shadow-lg">
+        <div className="relative w-full h-56">
+          {/* Background Banner Image */}
+          <img 
+            src={currentRestaurant?.theme?.logo || '/banner.png'}
+            alt={`Banner ${currentRestaurant?.theme?.name}`}
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Dark overlay for better text readability */}
+          <div 
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8))' }}
+          />
+          
+          {/* Content overlay */}
+          <div className="absolute inset-0 px-4 py-6 flex flex-col justify-between">
+            <div className="max-w-4xl mx-auto w-full">
+              <h1 className="text-2xl font-bold text-white drop-shadow-lg mb-2">
                 {currentRestaurant?.theme?.name}
               </h1>
 
@@ -125,7 +124,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
               {currentRestaurant?.settings?.useCustomHours &&
               currentRestaurant?.settings?.customHours ? (
                 <Collapsible open={hoursOpen} onOpenChange={setHoursOpen}>
-                  <CollapsibleTrigger className="flex items-center gap-1 text-white/80 text-sm hover:text-white transition-colors">
+                  <CollapsibleTrigger className="flex items-center gap-1 text-white/90 text-sm hover:text-white transition-colors">
                     <Clock className="w-3 h-3" />
                     <span>Ver horários de funcionamento</span>
                     {hoursOpen ? (
@@ -135,7 +134,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
                     )}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-2">
-                    <div className="bg-white/10 rounded-lg p-3 space-y-1">
+                    <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3 space-y-1 border border-white/10">
                       {(
                         Object.keys(
                           currentRestaurant?.settings?.customHours
@@ -146,7 +145,7 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
                         return (
                           <div
                             key={day}
-                            className="flex justify-between items-center text-sm"
+                            className="flex justify-between items-center text-sm text-white"
                           >
                             <span className="text-white/90">
                               {getDayName(day)}
@@ -166,23 +165,23 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
                   </CollapsibleContent>
                 </Collapsible>
               ) : (
-                <p className="text-white/80 text-sm flex items-center gap-1">
+                <p className="text-white/90 text-sm flex items-center gap-1 drop-shadow">
                   <Clock className="w-3 h-3" />
                   {currentRestaurant?.settings?.hours}
                 </p>
               )}
             </div>
-          </div>
 
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60" />
-            <Input
-              placeholder="Buscar itens do cardápio..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20"
-            />
+            {/* Search Bar */}
+            <div className="relative max-w-4xl mx-auto w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/70" />
+              <Input
+                placeholder="Buscar itens do cardápio..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20 backdrop-blur-sm"
+              />
+            </div>
           </div>
         </div>
       </div>

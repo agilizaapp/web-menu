@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { createOrderPayload, validateOrderPayload } from "@/utils/orderUtils";
 import { cookieService } from "@/services/cookies";
+import { animations } from "@/lib/animations";
 import type { AddressData } from "@/types";
 
 interface CustomerData {
@@ -393,37 +394,39 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={() => setShowQrCode(!showQrCode)}
-                      className="mb-4"
+                      className="mb-4 transition-all duration-200 hover:scale-105"
                     >
                       {showQrCode ? "Ocultar QR Code" : "Mostrar QR Code"}
                     </Button>
                   </div>
 
                   {showQrCode && (
-                    <div className="flex justify-center p-6 bg-white rounded-lg">
-                      <QRCodeSVG
-                        value={pixCode}
-                        size={200}
-                        level="M"
-                        includeMargin={true}
-                      />
+                    <div className={`flex justify-center p-6 bg-white rounded-lg ${animations.fadeIn}`}>
+                      <div className={`${animations.scaleIn}`}>
+                        <QRCodeSVG
+                          value={pixCode}
+                          size={200}
+                          level="M"
+                          includeMargin={true}
+                        />
+                      </div>
                     </div>
                   )}
 
                   <Separator />
 
                   {/* Código PIX */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${animations.fadeInUp}`}>
                     <Label className="text-sm font-medium">Código PIX Copia e Cola</Label>
                     <div className="flex gap-2">
-                      <div className="flex-1 p-3 bg-muted rounded-md text-xs font-mono break-all">
+                      <div className="flex-1 p-3 bg-muted rounded-md text-xs font-mono break-all transition-all duration-200 hover:bg-muted/80">
                         {pixCode}
                       </div>
                       <Button
                         variant="outline"
                         size="icon"
                         onClick={handleCopyPixCode}
-                        className="shrink-0"
+                        className="shrink-0 transition-all duration-200 hover:scale-110"
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -433,21 +436,21 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
                   <Separator />
 
                   {/* Instruções */}
-                  <div className="space-y-3">
+                  <div className={`space-y-3 ${animations.fadeInUp}`}>
                     <h3 className="font-semibold flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-4 h-4 text-primary" />
                       Como pagar:
                     </h3>
                     <ol className="space-y-2 text-sm text-muted-foreground">
-                      <li className="flex gap-2">
+                      <li className="flex gap-2 transition-all duration-200 hover:translate-x-1">
                         <span className="font-semibold">1.</span>
                         <span>Abra o app do seu banco</span>
                       </li>
-                      <li className="flex gap-2">
+                      <li className="flex gap-2 transition-all duration-200 hover:translate-x-1">
                         <span className="font-semibold">2.</span>
                         <span>Escolha pagar via PIX</span>
                       </li>
-                      <li className="flex gap-2">
+                      <li className="flex gap-2 transition-all duration-200 hover:translate-x-1">
                         <span className="font-semibold">3.</span>
                         <span>Escaneie o QR Code ou cole o código PIX</span>
                       </li>

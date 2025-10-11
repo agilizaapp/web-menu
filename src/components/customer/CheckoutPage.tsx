@@ -74,6 +74,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const restaurantAddress = currentRestaurant?.settings?.address || "Rua Exemplo, 123 - Centro";
 
+  // Função para limpar carrinho e voltar ao menu
+  const handleClearCart = () => {
+    clearCart();
+    onBack(); // Volta para a tela de produtos
+  };
+
   const handleLogout = () => {
     cookieService.removeCustomerToken();
     clearCustomer();
@@ -551,18 +557,22 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             {/* Actions */}
             <div className="flex flex-col gap-2 pt-4">
               {isEditingAddress && (
-                <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-md flex items-center gap-2">
-                  <span>⚠️</span>
+                <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-md flex items-center gap-2 animate-in slide-in-from-top-2 fade-in duration-300">
+                  <span className="animate-pulse">⚠️</span>
                   <span>Finalize a edição do endereço para continuar</span>
                 </div>
               )}
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={clearCart}>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 transition-all duration-200 hover:scale-105" 
+                  onClick={handleClearCart}
+                >
                   <Trash2 className="w-4 h-4 mr-2 hidden md:!flex" />
                   Limpar Carrinho
                 </Button>
                 <Button
-                  className="flex-1"
+                  className="flex-1 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                   style={{ backgroundColor: "var(--restaurant-primary)" }}
                   onClick={handleProceedToPayment}
                   disabled={isEditingAddress}

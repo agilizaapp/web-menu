@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { CartItem, MenuItem } from '@/types/index';
 import { useCartStore } from '@/stores';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+import { animations } from '@/lib/animations';
 
 
 interface MenuItemModalProps {
@@ -86,7 +87,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className={`max-w-2xl max-h-[90vh] overflow-y-auto p-0 ${animations.fadeIn}`}>
         <DialogHeader className="sr-only">
           <DialogTitle>{item.name}</DialogTitle>
           <DialogDescription>
@@ -95,16 +96,16 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
         </DialogHeader>
         <div className="relative">
           {/* Image */}
-          <div className="aspect-[4/3] relative">
+          <div className="aspect-[4/3] relative overflow-hidden group">
             <ImageWithFallback
               src={item.image}
               alt={item.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             <Button
               variant="outline"
               size="icon"
-              className="absolute top-4 right-4 bg-white/90 hover:bg-white"
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white transition-all duration-200 hover:rotate-90"
               onClick={onClose}
             >
               <X className="w-4 h-4" />
@@ -113,24 +114,28 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
 
           <div className="p-2 sm:p-6">
             {/* Header */}
-            <div className="mb-4">
+            <div className={`mb-4 ${animations.fadeInUp}`}>
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-2xl font-semibold">{item.name}</h2>
-                <Badge variant="secondary">{item.category}</Badge>
+                <Badge variant="secondary" className="animate-in zoom-in-95 duration-300">{item.category}</Badge>
               </div>
               <p className="text-foreground/70 mb-3">{item.description}</p>
-              <div className="text-xl font-semibold" style={{ color: 'var(--restaurant-primary)' }}>
+              <div className="text-xl font-semibold transition-all duration-200 hover:scale-105 inline-block" style={{ color: 'var(--restaurant-primary)' }}>
                 R$ {item.price.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
 
             {/* Modifiers */}
-            {item.modifiers && item.modifiers.map(modifier => (
-              <div key={modifier.id} className="mb-6">
+            {item.modifiers && item.modifiers.map((modifier, index) => (
+              <div 
+                key={modifier.id} 
+                className={`mb-6 ${animations.fadeInUp}`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <h3 className="font-medium">{modifier.name}</h3>
                   {modifier.required && (
-                    <Badge variant="destructive" className="text-xs">Obrigatório</Badge>
+                    <Badge variant="destructive" className="text-xs animate-in zoom-in-95 duration-300">Obrigatório</Badge>
                   )}
                 </div>
 
@@ -140,10 +145,10 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                     onValueChange={(value) => handleModifierChange(modifier.id, value, true)}
                   >
                     {modifier.options.map(option => (
-                      <div key={option.id} className="flex items-center justify-between">
+                      <div key={option.id} className="flex items-center justify-between transition-all duration-200 hover:bg-accent/50 rounded-md p-2 -ml-2">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value={option.id} id={option.id} />
-                          <Label htmlFor={option.id}>{option.name}</Label>
+                          <Label htmlFor={option.id} className="cursor-pointer">{option.name}</Label>
                         </div>
                         {option.price > 0 && (
                           <span className="text-sm font-medium text-foreground/80">
@@ -156,7 +161,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                 ) : (
                   <div className="space-y-3">
                     {modifier.options.map(option => (
-                      <div key={option.id} className="flex items-center justify-between">
+                      <div key={option.id} className="flex items-center justify-between transition-all duration-200 hover:bg-accent/50 rounded-md p-2 -ml-2">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id={option.id}
@@ -165,7 +170,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                               handleModifierChange(modifier.id, option.id, checked as boolean)
                             }
                           />
-                          <Label htmlFor={option.id}>{option.name}</Label>
+                          <Label htmlFor={option.id} className="cursor-pointer">{option.name}</Label>
                         </div>
                         {option.price > 0 && (
                           <span className="text-sm font-medium text-foreground/80">
@@ -187,6 +192,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
+                  className="transition-all duration-200 hover:scale-110"
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
@@ -195,6 +201,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(quantity + 1)}
+                  className="transition-all duration-200 hover:scale-110"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -203,7 +210,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
               <Button
                 onClick={handleAddToCart}
                 disabled={!canAddToCart()}
-                className="px-4 text-white font-semibold"
+                className="px-4 text-white font-semibold transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                 style={{ backgroundColor: 'var(--restaurant-primary)' }}
               >
                 Adicionar ao carrinho - R$ {(totalPrice * quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

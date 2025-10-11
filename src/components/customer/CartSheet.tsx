@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useCartStore, useRestaurantStore } from '@/stores';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
+import { animations } from '@/lib/animations';
 
 interface CartSheetProps {
   onCheckout?: () => void;
@@ -47,12 +48,12 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button
-          className="px-2 fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg"
+          className={`px-2 fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl ${animations.bounceIn}`}
           style={{ backgroundColor: 'var(--restaurant-primary)' }}
         >
-          <ShoppingBag className="w-8 h-8" />
+          <ShoppingBag className="w-8 h-8 transition-transform duration-300 group-hover:rotate-12" />
           <Badge 
-            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs"
+            className={`absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs ${animations.scaleIn}`}
             style={{ backgroundColor: 'var(--restaurant-accent)', color: 'white' }}
           >
             {cartCount}
@@ -74,13 +75,17 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
         <div className="flex flex-col h-full mt-6">
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto space-y-4">
-            {cart.map(item => (
-              <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
-                <div className="w-16 h-16 rounded-md overflow-hidden shrink-0">
+            {cart.map((item, index) => (
+              <div 
+                key={item.id} 
+                className={`flex gap-3 p-3 border rounded-lg transition-all duration-300 hover:border-primary/50 hover:shadow-md ${animations.fadeInUp}`}
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 group">
                   <ImageWithFallback
                     src={item.menuItem.image}
                     alt={item.menuItem.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 </div>
 
@@ -113,7 +118,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 transition-all duration-200 hover:scale-110 hover:bg-primary/10"
                         onClick={() => updateCartItem(item.id, item.quantity - 1)}
                       >
                         <Minus className="w-3 h-3" />
@@ -124,7 +129,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 transition-all duration-200 hover:scale-110 hover:bg-primary/10"
                         onClick={() => updateCartItem(item.id, item.quantity + 1)}
                       >
                         <Plus className="w-3 h-3" />
@@ -134,7 +139,7 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="h-8 w-8 text-destructive hover:text-destructive transition-all duration-200 hover:scale-110 hover:rotate-12"
                       onClick={() => removeFromCart(item.id)}
                     >
                       <Trash2 className="w-4 h-4" />

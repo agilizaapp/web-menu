@@ -12,6 +12,7 @@ export interface Restaurant {
 export interface RestaurantTheme {
   name?: string;
   logo: string;
+  banner?: string; // Banner image for header background
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
