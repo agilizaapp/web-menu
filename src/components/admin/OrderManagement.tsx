@@ -14,7 +14,94 @@ import { toast } from 'sonner';
 import { AdminService } from '@/services/admin/admin.service';
 import { ApiError } from '@/lib/utils/api-error';
 
-// ... helpers permanecem iguais ...
+// ==================== HELPER FUNCTIONS ====================
+
+// Helper function to format address for display
+const formatAddress = (address: IOrderAddress | undefined): string => {
+  if (!address) return 'Retirada no local';
+  
+  const parts = [
+    address.street,
+    address.number,
+    address.neighborhood,
+    address.postalCode
+  ].filter(Boolean);
+  
+  if (address.complement) {
+    parts.push(`(${address.complement})`);
+  }
+  
+  return parts.join(', ') || 'Endereço não informado';
+};
+
+// Helper para encontrar produto no menu (para buscar modificadores)
+const findMenuItem = (productId: number, menu: MenuItem[]): MenuItem | null => {
+  return menu.find(item => item.id === productId) || null;
+};
+
+// ✅ ATUALIZADO: Helper para formatar modificadores
+const formatModifiers = (
+  modifiers: IOrderApi['detail']['items'][0]['modifiers'], 
+  menuItem: MenuItem | null
+): string => {
+  if (!modifiers || modifiers.length === 0) return '';
+  
+  // Se não temos o menuItem, retorna vazio (não podemos buscar nomes)
+  if (!menuItem?.modifiers) return '';
+  
+  const modifierNames: string[] = [];
+  
+  modifiers.forEach(mod => {
+    const modifierGroup = menuItem.modifiers?.find(g => g.id === mod.modifier_id);
+    if (modifierGroup) {
+      const option = modifierGroup.options.find(o => o.id === mod.option_id);
+      if (option) {
+        modifierNames.push(option.name);
+      }
+    }
+  });
+  
+  return modifierNames.length > 0 ? modifierNames.join(', ') : '';
+};
+
+// ✅ ATUALIZADO: Helper para calcular preço total do item (price já vem da API)
+const calculateItemTotal = (
+  price: number,
+  quantity: number,
+  modifiers: IOrderApi['detail']['items'][0]['modifiers'],
+  menuItem: MenuItem | null
+): number => {
+  // O preço base já vem da API
+  let itemPrice = price;
+  
+  // Adicionar preço dos modificadores (se disponível no menu)
+  if (modifiers && menuItem?.modifiers) {
+    modifiers.forEach(mod => {
+      const modifierGroup = menuItem.modifiers?.find(g => g.id === mod.modifier_id);
+      if (modifierGroup) {
+        const option = modifierGroup.options.find(o => o.id === mod.option_id);
+        if (option) {
+          itemPrice += option.price;
+        }
+      }
+    });
+  }
+  
+  return itemPrice * quantity;
+};
+
+// Helper para formatar método de pagamento
+const formatPaymentMethod = (method: string): string => {
+  const methods: Record<string, string> = {
+    'pix': 'PIX',
+    'credit_card': 'Cartão de Crédito',
+    'debit_card': 'Cartão de Débito',
+    'cash': 'Dinheiro',
+  };
+  return methods[method] || method;
+};
+
+// ==================== COMPONENT ====================
 
 export const OrderManagement: React.FC = () => {
   const { menu } = useRestaurantStore();
@@ -25,8 +112,6 @@ export const OrderManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [apiOrders, setApiOrders] = useState<IOrderApi[]>([]);
-  
-  // ✅ NOVO: Estado para rastrear loading de cada pedido
   const [loadingOrders, setLoadingOrders] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -81,16 +166,12 @@ export const OrderManagement: React.FC = () => {
     ? apiOrders 
     : apiOrders.filter(order => order.status === filter);
 
-  // ✅ ATUALIZADO: handleStatusUpdate com loading state
   const handleStatusUpdate = async (orderId: number, newStatus: OrderStatus) => {
     try {
-      // ✅ Adicionar pedido ao set de loading
       setLoadingOrders(prev => new Set(prev).add(orderId));
 
-      // ✅ Atualizar na API
       await AdminService.updateOrderStatus(orderId, newStatus);
 
-      // ✅ Atualizar localmente
       setApiOrders(prev => 
         prev.map(order => 
           order.id === orderId 
@@ -99,10 +180,8 @@ export const OrderManagement: React.FC = () => {
         )
       );
 
-      // ✅ Atualizar store (fallback)
       updateLocalOrderStatus(`order-${orderId}`, newStatus);
 
-      // ✅ Mensagens de feedback
       const messages: Record<OrderStatus, string> = {
         pending: 'Pedido marcado como pendente',
         confirmed: '✅ Pedido confirmado!',
@@ -122,7 +201,6 @@ export const OrderManagement: React.FC = () => {
         toast.error('Erro ao atualizar status do pedido');
       }
     } finally {
-      // ✅ Remover pedido do set de loading
       setLoadingOrders(prev => {
         const newSet = new Set(prev);
         newSet.delete(orderId);
@@ -131,7 +209,6 @@ export const OrderManagement: React.FC = () => {
     }
   };
 
-  // ✅ NOVO: Helper para verificar se pedido está em loading
   const isOrderLoading = (orderId: number) => loadingOrders.has(orderId);
 
   const getStatusColor = (status: OrderStatus) => {
@@ -260,7 +337,6 @@ export const OrderManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                       Pedido #{order.id}
-                      {/* ✅ NOVO: Indicador de loading no header */}
                       {orderLoading && (
                         <Loader2 className="w-4 h-4 animate-spin text-primary" />
                       )}
@@ -279,8 +355,89 @@ export const OrderManagement: React.FC = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  {/* Customer Info, Items, Payment, Total permanecem iguais */}
-                  
+                  {/* ✅ Customer Info */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium">{order.customer.name}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                      <span className="line-clamp-2">
+                        {order.detail.delivery 
+                          ? formatAddress(order.detail.address)
+                          : 'Retirada no local'
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* ✅ ATUALIZADO: Order Items */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Itens do Pedido</h4>
+                    {order.detail.items.map((item, index) => {
+                      // Buscar menuItem apenas para pegar informações de modificadores
+                      const menuItem = findMenuItem(item.product_id, menu);
+                      const modifiersText = formatModifiers(item.modifiers, menuItem);
+                      // Usar price e quantity da API
+                      const itemTotal = calculateItemTotal(item.price, item.quantity, item.modifiers, menuItem);
+                      
+                      return (
+                        <div key={`${item.product_id}-${index}`} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="flex-1">
+                              <span className="font-medium">{item.quantity}x</span>{' '}
+                              {/* ✅ USAR item.name da API */}
+                              {item.name}
+                            </span>
+                            <span className="font-medium ml-2">
+                              R$ {itemTotal.toLocaleString("pt-BR", { 
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2 
+                              })}
+                            </span>
+                          </div>
+                          {modifiersText && (
+                            <div className="text-xs text-muted-foreground pl-6">
+                              + {modifiersText}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <Separator />
+
+                  {/* ✅ Payment Method */}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Forma de Pagamento</span>
+                    <span className="font-medium">{formatPaymentMethod(order.payment_method)}</span>
+                  </div>
+
+                  {/* ✅ Delivery Type */}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tipo de Entrega</span>
+                    <span className="font-medium">
+                      {order.detail.delivery ? 'Delivery' : 'Retirada'}
+                    </span>
+                  </div>
+
+                  <Separator />
+
+                  {/* ✅ Total */}
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span className="text-lg">
+                      R$ {order.amount.toLocaleString("pt-BR", { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                      })}
+                    </span>
+                  </div>
+
                   {/* WhatsApp Button */}
                   {order.whatsapp_url && (
                     <Button
@@ -295,7 +452,7 @@ export const OrderManagement: React.FC = () => {
                     </Button>
                   )}
 
-                  {/* ✅ ATUALIZADO: Action Buttons com Loading */}
+                  {/* Action Buttons */}
                   <div className="space-y-2">
                     {order.status === 'pending' && (
                       <div className="flex gap-2">

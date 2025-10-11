@@ -39,6 +39,10 @@ export interface IOrderItemModifier {
 }
 
 export interface IOrderItem {
+  name: string;
+  description: string;
+  category: string;
+  price: number;
   product_id: number;
   quantity: number;
   modifiers?: IOrderItemModifier[];
