@@ -133,12 +133,16 @@ export class OrderMapper {
   private static mapStatus(apiStatus: string): Order['status'] {
     const statusMap: Record<string, Order['status']> = {
       'pending': 'pending',
-      'accepted': 'accepted',
-      'preparing': 'preparing',
-      'ready': 'ready',
-      'delivered': 'delivered',
-      'rejected': 'rejected',
-      'cancelled': 'rejected',
+      'accepted': 'confirmed',
+      'confirmed': 'confirmed',
+      'preparing': 'in_progress',
+      'in_progress': 'in_progress',
+      'ready': 'prepared',
+      'prepared': 'prepared',
+      'delivered': 'finished',
+      'finished': 'finished',
+      'rejected': 'cancelled',
+      'cancelled': 'cancelled',
     };
 
     return statusMap[apiStatus] || 'pending';
@@ -162,8 +166,8 @@ export class OrderMapper {
    * Determina status do pagamento baseado no status do pedido
    */
   private static getPaymentStatus(orderStatus: string): Order['paymentStatus'] {
-    if (orderStatus === 'delivered') return 'completed';
-    if (orderStatus === 'rejected' || orderStatus === 'cancelled') return 'failed';
+    if (orderStatus === 'finished') return 'completed';
+    if (orderStatus === 'cancelled') return 'failed';
     return 'pending';
   }
 

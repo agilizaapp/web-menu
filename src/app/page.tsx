@@ -67,6 +67,8 @@ export default function Page() {
               deliveryFee: restaurant.store.configs.settings.deliveryFee,
               deliveryZones: restaurant.store.configs.settings.deliveryZones,
               pixKey: restaurant.store.configs.settings.pixKey,
+              address: restaurant.store.configs.settings.address,
+              pickUpLocation: restaurant.store.configs.settings.pickUpLocation,
             },
             menu: products as MenuItem[],
           };

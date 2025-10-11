@@ -261,7 +261,7 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
     <>
       {/* Modal 1 - Telefone */}
       <Dialog open={currentStep === 1} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           {onClose && (
             <Button
               variant="ghost"
@@ -336,7 +336,7 @@ export const RegisterModals: React.FC<RegisterModalsProps> = ({ onComplete, onCl
 
       {/* Modal 2 - Nome e Data de Nascimento */}
       <Dialog open={currentStep === 2} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />

@@ -10,7 +10,7 @@ export class AdminService {
     return data;
   }
 
-  static async updateOrderStatus(orderId: number, newStatus: OrderStatus): Promise<any> {
+  static async updateOrderStatus(orderId: number, newStatus: OrderStatus): Promise<IGetAllOrdersApiResponse> {
     const { data } = await apiClient.put<IGetAllOrdersApiResponse>(
       API_ENDPOINTS.orders.updateStatus(orderId),
       { status: newStatus }

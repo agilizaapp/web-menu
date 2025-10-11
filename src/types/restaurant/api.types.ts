@@ -79,6 +79,11 @@ export interface IStoreConfigs {
       deliveryFee: number;
       deliveryZones: string[];
       pixKey: string;
+      address?: string;
+      pickUpLocation?: {
+        label: string;
+        mapsUrl: string;
+      };
     };
   };
 };

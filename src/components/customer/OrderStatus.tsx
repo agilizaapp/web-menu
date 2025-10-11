@@ -56,15 +56,15 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
 
   const statusSteps = [
     { key: 'pending', label: 'Pedido Recebido', icon: CheckCircle },
-    { key: 'accepted', label: 'Pedido Confirmado', icon: CheckCircle },
-    { key: 'preparing', label: 'Na Cozinha', icon: ChefHat },
+    { key: 'confirmed', label: 'Pedido Confirmado', icon: CheckCircle },
+    { key: 'in_progress', label: 'Na Cozinha', icon: ChefHat },
     { 
-      key: 'ready', 
+      key: 'prepared', 
       label: order.deliveryType === 'delivery' ? 'Saiu para Entrega' : 'Pronto para Retirada', 
       icon: order.deliveryType === 'delivery' ? Truck : Clock 
     },
     { 
-      key: 'delivered', 
+      key: 'finished', 
       label: order.deliveryType === 'delivery' ? 'Entregue' : 'Retirado', 
       icon: CheckCircle 
     }
@@ -79,11 +79,11 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500';
-      case 'accepted': return 'bg-blue-500';
-      case 'preparing': return 'bg-orange-500';
-      case 'ready': return 'bg-green-500';
-      case 'delivered': return 'bg-green-600';
-      case 'rejected': return 'bg-red-500';
+      case 'confirmed': return 'bg-blue-500';
+      case 'in_progress': return 'bg-orange-500';
+      case 'prepared': return 'bg-green-500';
+      case 'finished': return 'bg-green-600';
+      case 'cancelled': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
   };
@@ -118,11 +118,11 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
               />
               <span className="capitalize">
                 {order.status === 'pending' ? 'Pedido Recebido' :
-                 order.status === 'accepted' ? 'Pedido Confirmado' :
-                 order.status === 'preparing' ? 'Na Cozinha' :
-                 order.status === 'ready' ? (order.deliveryType === 'delivery' ? 'Saiu para Entrega' : 'Pronto para Retirada') :
-                 order.status === 'delivered' ? (order.deliveryType === 'delivery' ? 'Entregue' : 'Retirado') :
-                 order.status === 'rejected' ? 'Pedido Cancelado' :
+                 order.status === 'confirmed' ? 'Pedido Confirmado' :
+                 order.status === 'in_progress' ? 'Na Cozinha' :
+                 order.status === 'prepared' ? (order.deliveryType === 'delivery' ? 'Saiu para Entrega' : 'Pronto para Retirada') :
+                 order.status === 'finished' ? (order.deliveryType === 'delivery' ? 'Entregue' : 'Retirado') :
+                 order.status === 'cancelled' ? 'Pedido Cancelado' :
                  order.status}
               </span>
             </CardTitle>
@@ -131,25 +131,25 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
             {order.status === 'pending' && (
               <p>Recebemos seu pedido e estamos processando.</p>
             )}
-            {order.status === 'accepted' && (
+            {order.status === 'confirmed' && (
               <p>Seu pedido foi confirmado e estamos começando a prepará-lo.</p>
             )}
-            {order.status === 'preparing' && (
+            {order.status === 'in_progress' && (
               <p>Nossos chefs estão preparando sua deliciosa refeição!</p>
             )}
-            {order.status === 'ready' && order.deliveryType === 'delivery' && (
+            {order.status === 'prepared' && order.deliveryType === 'delivery' && (
               <p>Seu pedido saiu para entrega e chegará em breve!</p>
             )}
-            {order.status === 'ready' && order.deliveryType === 'pickup' && (
+            {order.status === 'prepared' && order.deliveryType === 'pickup' && (
               <p>Seu pedido está pronto! Você pode vir buscar a qualquer momento.</p>
             )}
-            {order.status === 'delivered' && order.deliveryType === 'delivery' && (
+            {order.status === 'finished' && order.deliveryType === 'delivery' && (
               <p>Seu pedido foi entregue. Bom apetite!</p>
             )}
-            {order.status === 'delivered' && order.deliveryType === 'pickup' && (
+            {order.status === 'finished' && order.deliveryType === 'pickup' && (
               <p>Pedido retirado. Bom apetite!</p>
             )}
-            {order.status === 'rejected' && (
+            {order.status === 'cancelled' && (
               <p>Desculpe, tivemos que cancelar seu pedido. Você será reembolsado em breve.</p>
             )}
           </CardContent>
@@ -204,7 +204,7 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
           <CardContent>
             <div className="space-y-3">
               {order.items.map(item => (
-                <div key={item.id} className="flex justify-between">
+                <div key={item.id} className="flex justify-between gap-1">
                   <span>{item.quantity}x {item.menuItem.name}</span>
                   <span>R$ {(item.totalPrice * item.quantity).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>

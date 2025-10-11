@@ -29,6 +29,10 @@ export interface RestaurantSettings {
   pixKey: string;
   phone?: string;
   address?: string;
+  pickUpLocation?: {
+    label: string;
+    mapsUrl: string;
+  };
   minimumOrder?: number;
   estimatedDeliveryTime?: string;
   paymentMethods?: PaymentMethod[];

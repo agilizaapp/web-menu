@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartStore, useRestaurantStore, useCustomerStore } from "@/stores";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import { AddressPreview } from "./AddressPreview";
+import { LocationMapModal } from "./LocationMapModal";
 import type { AddressData } from "@/types";
 import { fetchAddressByCEP, formatCEP, isValidCEP } from "@/services/viaCEP";
 import { cookieService } from "@/services/cookies";
@@ -52,7 +53,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
   const [addressErrors, setAddressErrors] = useState<Partial<Record<keyof AddressData, string>>>({});
   const [isLoadingCEP, setIsLoadingCEP] = useState(false);
-  const [isEditingAddress, setIsEditingAddress] = useState(false); // Novo estado
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   // Preencher endereço automaticamente se vier do store (cliente autenticado com endereço salvo)
   useEffect(() => {
@@ -70,9 +72,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const cartTotal = getTotalCartPrice();
   const deliveryFee = deliveryType === "delivery" ? (currentRestaurant?.settings?.deliveryFee || 0) : 0;
+  const deliveryToShow = currentRestaurant?.settings?.deliveryFee || 0;
   const finalTotal = cartTotal + deliveryFee;
 
-  const restaurantAddress = currentRestaurant?.settings?.address || "Rua Exemplo, 123 - Centro";
+  // Usar pickUpLocation se disponível, senão fallback para address
+  const restaurantAddress = currentRestaurant?.settings?.pickUpLocation?.label 
+    || currentRestaurant?.settings?.address 
+    || "";
 
   // Função para limpar carrinho e voltar ao menu
   const handleClearCart = () => {
@@ -267,7 +273,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <div>
                       <p className="font-medium">Entrega</p>
                       <p className="text-xs text-muted-foreground">
-                        Taxa: R$ {deliveryFee.toFixed(2)}
+                        Taxa: R$ {deliveryToShow.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -281,12 +287,71 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <Store className="w-4 h-4" />
                     <div>
                       <p className="font-medium">Retirada no Local</p>
-                      <p className="text-xs text-muted-foreground">Sem taxa de entrega</p>
+                      <p className="text-xs text-muted-foreground">
+                        Sem taxa de entrega
+                      </p>
                     </div>
                   </div>
                 </Label>
               </div>
             </RadioGroup>
+
+            {/* Endereço de Retirada (quando pickup)
+            {deliveryType === "pickup" && (
+              currentRestaurant?.settings?.pickUpLocation ? (
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="pt-4">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm mb-1">Local de Retirada</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {currentRestaurant.settings.pickUpLocation.label}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsMapModalOpen(true)}
+                            className="text-primary border-primary/50 hover:bg-primary/10"
+                          >
+                            <MapPin className="w-3 h-3 mr-1" />
+                            Ver no Mapa
+                          </Button>
+                          {currentRestaurant.settings.pickUpLocation.mapsUrl && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(currentRestaurant.settings.pickUpLocation!.mapsUrl, '_blank')}
+                              className="text-primary hover:text-primary/80"
+                            >
+                              <MapPin className="w-3 h-3 mr-1" />
+                              Abrir no Google Maps
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : currentRestaurant?.settings?.address ? (
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="pt-4">
+                    <div className="flex items-start gap-3">
+                      <Store className="w-5 h-5 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm mb-1">Local de Retirada</p>
+                        <p className="text-sm text-muted-foreground">
+                          {currentRestaurant.settings.address}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null
+            )} */}
 
             {/* Campo de Endereço ou Endereço do Restaurante */}
             {deliveryType === "delivery" ? (
@@ -306,132 +371,198 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 ) : (
                   // Cliente novo - mostrar inputs normalmente
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* CEP - PRIMEIRO CAMPO */}
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="postalCode">
-                      CEP <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
+                    {/* CEP - PRIMEIRO CAMPO */}
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="postalCode">
+                        CEP <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="postalCode"
+                          placeholder="12345-678"
+                          value={addressData.postalCode}
+                          onChange={(e) =>
+                            handleAddressChange("postalCode", e.target.value)
+                          }
+                          onBlur={() => {
+                            if (addressData.postalCode) {
+                              const error = validateAddressField(
+                                "postalCode",
+                                addressData.postalCode
+                              );
+                              if (error)
+                                setAddressErrors((prev) => ({
+                                  ...prev,
+                                  postalCode: error,
+                                }));
+                            }
+                          }}
+                          className={
+                            addressErrors.postalCode ? "border-destructive" : ""
+                          }
+                          maxLength={9}
+                          disabled={isLoadingCEP}
+                        />
+                        {isLoadingCEP && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      {addressErrors.postalCode && (
+                        <p className="text-sm text-destructive">
+                          {addressErrors.postalCode}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Digite o CEP para preencher automaticamente
+                      </p>
+                    </div>
+
+                    {/* Rua */}
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="street">
+                        Rua <span className="text-destructive">*</span>
+                      </Label>
                       <Input
-                        id="postalCode"
-                        placeholder="12345-678"
-                        value={addressData.postalCode}
-                        onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                        id="street"
+                        placeholder="Nome da rua"
+                        value={addressData.street}
+                        onChange={(e) =>
+                          handleAddressChange("street", e.target.value)
+                        }
                         onBlur={() => {
-                          if (addressData.postalCode) {
-                            const error = validateAddressField('postalCode', addressData.postalCode);
-                            if (error) setAddressErrors(prev => ({ ...prev, postalCode: error }));
+                          if (addressData.street) {
+                            const error = validateAddressField(
+                              "street",
+                              addressData.street
+                            );
+                            if (error)
+                              setAddressErrors((prev) => ({
+                                ...prev,
+                                street: error,
+                              }));
                           }
                         }}
-                        className={addressErrors.postalCode ? "border-destructive" : ""}
-                        maxLength={9}
+                        className={
+                          addressErrors.street ? "border-destructive" : ""
+                        }
                         disabled={isLoadingCEP}
                       />
-                      {isLoadingCEP && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                        </div>
+                      {addressErrors.street && (
+                        <p className="text-sm text-destructive">
+                          {addressErrors.street}
+                        </p>
                       )}
                     </div>
-                    {addressErrors.postalCode && (
-                      <p className="text-sm text-destructive">{addressErrors.postalCode}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Digite o CEP para preencher automaticamente
-                    </p>
-                  </div>
 
-                  {/* Rua */}
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="street">
-                      Rua <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="street"
-                      placeholder="Nome da rua"
-                      value={addressData.street}
-                      onChange={(e) => handleAddressChange('street', e.target.value)}
-                      onBlur={() => {
-                        if (addressData.street) {
-                          const error = validateAddressField('street', addressData.street);
-                          if (error) setAddressErrors(prev => ({ ...prev, street: error }));
+                    {/* Número */}
+                    <div className="space-y-2">
+                      <Label htmlFor="number">
+                        Número <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="number"
+                        placeholder="123"
+                        value={addressData.number}
+                        onChange={(e) =>
+                          handleAddressChange("number", e.target.value)
                         }
-                      }}
-                      className={addressErrors.street ? "border-destructive" : ""}
-                      disabled={isLoadingCEP}
-                    />
-                    {addressErrors.street && (
-                      <p className="text-sm text-destructive">{addressErrors.street}</p>
-                    )}
-                  </div>
-
-                  {/* Número */}
-                  <div className="space-y-2">
-                    <Label htmlFor="number">
-                      Número <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="number"
-                      placeholder="123"
-                      value={addressData.number}
-                      onChange={(e) => handleAddressChange('number', e.target.value)}
-                      onBlur={() => {
-                        if (addressData.number) {
-                          const error = validateAddressField('number', addressData.number);
-                          if (error) setAddressErrors(prev => ({ ...prev, number: error }));
+                        onBlur={() => {
+                          if (addressData.number) {
+                            const error = validateAddressField(
+                              "number",
+                              addressData.number
+                            );
+                            if (error)
+                              setAddressErrors((prev) => ({
+                                ...prev,
+                                number: error,
+                              }));
+                          }
+                        }}
+                        className={
+                          addressErrors.number ? "border-destructive" : ""
                         }
-                      }}
-                      className={addressErrors.number ? "border-destructive" : ""}
-                    />
-                    {addressErrors.number && (
-                      <p className="text-sm text-destructive">{addressErrors.number}</p>
-                    )}
-                  </div>
+                      />
+                      {addressErrors.number && (
+                        <p className="text-sm text-destructive">
+                          {addressErrors.number}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Bairro */}
-                  <div className="space-y-2">
-                    <Label htmlFor="neighborhood">
-                      Bairro <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="neighborhood"
-                      placeholder="Centro"
-                      value={addressData.neighborhood}
-                      onChange={(e) => handleAddressChange('neighborhood', e.target.value)}
-                      onBlur={() => {
-                        if (addressData.neighborhood) {
-                          const error = validateAddressField('neighborhood', addressData.neighborhood);
-                          if (error) setAddressErrors(prev => ({ ...prev, neighborhood: error }));
+                    {/* Bairro */}
+                    <div className="space-y-2">
+                      <Label htmlFor="neighborhood">
+                        Bairro <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="neighborhood"
+                        placeholder="Centro"
+                        value={addressData.neighborhood}
+                        onChange={(e) =>
+                          handleAddressChange("neighborhood", e.target.value)
                         }
-                      }}
-                      className={addressErrors.neighborhood ? "border-destructive" : ""}
-                      disabled={isLoadingCEP}
-                    />
-                    {addressErrors.neighborhood && (
-                      <p className="text-sm text-destructive">{addressErrors.neighborhood}</p>
-                    )}
-                  </div>
+                        onBlur={() => {
+                          if (addressData.neighborhood) {
+                            const error = validateAddressField(
+                              "neighborhood",
+                              addressData.neighborhood
+                            );
+                            if (error)
+                              setAddressErrors((prev) => ({
+                                ...prev,
+                                neighborhood: error,
+                              }));
+                          }
+                        }}
+                        className={
+                          addressErrors.neighborhood ? "border-destructive" : ""
+                        }
+                        disabled={isLoadingCEP}
+                      />
+                      {addressErrors.neighborhood && (
+                        <p className="text-sm text-destructive">
+                          {addressErrors.neighborhood}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Complemento */}
-                  <div className="space-y-2">
-                    <Label htmlFor="complement">Complemento (Opcional)</Label>
-                    <Input
-                      id="complement"
-                      placeholder="Apto 101, Bloco B..."
-                      value={addressData.complement}
-                      onChange={(e) => handleAddressChange('complement', e.target.value)}
-                    />
+                    {/* Complemento */}
+                    <div className="space-y-2">
+                      <Label htmlFor="complement">Complemento (Opcional)</Label>
+                      <Input
+                        id="complement"
+                        placeholder="Apto 101, Bloco B..."
+                        value={addressData.complement}
+                        onChange={(e) =>
+                          handleAddressChange("complement", e.target.value)
+                        }
+                      />
+                    </div>
                   </div>
-                </div>
                 )}
               </div>
             ) : (
-              <div className="p-4 bg-muted/50 rounded-lg space-y-1">
+              <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                 <p className="font-medium text-sm">Local de Retirada:</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <Store className="w-4 h-4" />
                   {restaurantAddress}
                 </p>
+                {currentRestaurant?.settings?.pickUpLocation?.mapsUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsMapModalOpen(true)}
+                    className="w-full text-primary border-primary/50 hover:bg-primary/10"
+                  >
+                    <MapPin className="w-3 h-3 mr-1" />
+                    Ver Localização no Mapa
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
@@ -446,7 +577,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "pix" | "card")}>
+            <RadioGroup
+              value={paymentMethod}
+              onValueChange={(value) =>
+                setPaymentMethod(value as "pix" | "card")
+              }
+            >
               <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                 <RadioGroupItem value="pix" id="pix" />
                 <Label htmlFor="pix" className="flex-1 cursor-pointer">
@@ -454,7 +590,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <QrCodeIcon className="w-4 h-4" />
                     <div>
                       <p className="font-medium">PIX</p>
-                      <p className="text-xs text-muted-foreground">Pagamento instantâneo</p>
+                      <p className="text-xs text-muted-foreground">
+                        Pagamento instantâneo
+                      </p>
                     </div>
                   </div>
                 </Label>
@@ -467,7 +605,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <CreditCard className="w-4 h-4" />
                     <div>
                       <p className="font-medium">Cartão</p>
-                      <p className="text-xs text-muted-foreground">Crédito ou Débito</p>
+                      <p className="text-xs text-muted-foreground">
+                        Crédito ou Débito
+                      </p>
                     </div>
                   </div>
                 </Label>
@@ -498,30 +638,38 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm">{item.menuItem.name}</h4>
+                    <h4 className="font-medium text-sm">
+                      {item.menuItem.name}
+                    </h4>
                     <p className="text-xs text-muted-foreground">
                       {item.quantity}x R$ {item.totalPrice.toFixed(2)}
                     </p>
 
                     {/* Modifiers */}
-                    {Object.entries(item.selectedModifiers).map(([modifierId, optionIds]) => {
-                      const modifier = item.menuItem.modifiers?.find((m) => m.id === modifierId);
-                      if (!modifier || optionIds.length === 0) return null;
+                    {Object.entries(item.selectedModifiers).map(
+                      ([modifierId, optionIds]) => {
+                        const modifier = item.menuItem.modifiers?.find(
+                          (m) => m.id === modifierId
+                        );
+                        if (!modifier || optionIds.length === 0) return null;
 
-                      return (
-                        <div key={modifierId} className="mt-1">
-                          <span className="text-xs text-muted-foreground">
-                            {modifier.name}:{" "}
-                            {optionIds
-                              .map((id) => {
-                                const option = modifier.options.find((o) => o.id === id);
-                                return option?.name;
-                              })
-                              .join(", ")}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        return (
+                          <div key={modifierId} className="mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              {modifier.name}:{" "}
+                              {optionIds
+                                .map((id) => {
+                                  const option = modifier.options.find(
+                                    (o) => o.id === id
+                                  );
+                                  return option?.name;
+                                })
+                                .join(", ")}
+                            </span>
+                          </div>
+                        );
+                      }
+                    )}
                   </div>
 
                   <div className="text-right">
@@ -563,9 +711,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
               )}
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 transition-all duration-200 hover:scale-105" 
+                <Button
+                  variant="outline"
+                  className="flex-1 transition-all duration-200 hover:scale-105"
                   onClick={handleClearCart}
                 >
                   <Trash2 className="w-4 h-4 mr-2 hidden md:!flex" />
@@ -584,6 +732,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Mapa */}
+      {currentRestaurant?.settings?.pickUpLocation && (
+        <LocationMapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          location={currentRestaurant.settings.pickUpLocation}
+          title="Local de Retirada"
+        />
+      )}
     </div>
   );
 };

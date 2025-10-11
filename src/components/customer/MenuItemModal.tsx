@@ -87,7 +87,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({ item, onClose }) =
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className={`max-w-2xl max-h-[90vh] overflow-y-auto p-0 ${animations.fadeIn}`}>
+      <DialogContent className={`max-w-[calc(100%-1rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 ${animations.fadeIn}`}>
         <DialogHeader className="sr-only">
           <DialogTitle>{item.name}</DialogTitle>
           <DialogDescription>
