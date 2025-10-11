@@ -90,10 +90,14 @@ export const AdminApp: React.FC = () => {
               </TabsTrigger>
             </TabsList>
           ) : (
-            <TabsList className="grid w-full grid-cols-1">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="orders" className="flex items-center gap-2">
                 <ClipboardList className="w-4 h-4" />
                 <span>Pedidos</span>
+              </TabsTrigger>
+              <TabsTrigger value="menu" className="flex items-center gap-2">
+                <UtensilsCrossed className="w-4 h-4" />
+                <span className="hidden sm:inline">Cardápio</span>
               </TabsTrigger>
             </TabsList>
           )}
