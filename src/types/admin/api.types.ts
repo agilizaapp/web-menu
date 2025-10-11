@@ -1,11 +1,12 @@
 import { MenuCategory, MenuItem } from '../entities.types';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  timestamp: string;
-}
+// ApiResponse já está exportado em restaurant/api.types
+// export interface ApiResponse<T> {
+//   success: boolean;
+//   data: T;
+//   message?: string;
+//   timestamp: string;
+// }
 
 export interface PaginatedResponse<T> {
   success: boolean;
@@ -21,15 +22,16 @@ export interface PaginatedResponse<T> {
   timestamp: string;
 }
 
-export interface ApiErrorResponse {
-  success: false;
-  error: {
-    message: string;
-    code: string;
-    details?: Record<string, string | boolean | number | undefined>;
-  };
-  timestamp: string;
-}
+// ApiErrorResponse já está exportado em restaurant/api.types
+// interface ApiErrorResponse {
+//   success: false;
+//   error: {
+//     message: string;
+//     code: string;
+//     details?: Record<string, string | boolean | number | undefined>;
+//   };
+//   timestamp: string;
+// }
 
 // ==================== API ORDER TYPES ====================
 

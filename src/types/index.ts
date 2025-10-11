@@ -1,5 +1,22 @@
 export * from './restaurant/api.types';
-export * from './admin/api.types';
+// Export específicos de admin para evitar conflitos
+export type { 
+  PaginatedResponse,
+  IGetAllOrdersApiResponse,
+  IOrderApi,
+  IOrderDetail,
+  IOrderItem,
+  IOrderItemModifier,
+  IOrderCustomer,
+  IOrderAddress,
+  OrderStatus,
+  IGetProductByIdStoreApiResponse,
+  IStoreConfigs,
+  DayScheduleApi,
+  PaginationParams,
+  SortParams,
+  FilterParams
+} from './admin/api.types';
 export * from './entities.types';
 
 import type { MenuItem } from './entities.types';

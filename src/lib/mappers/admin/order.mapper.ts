@@ -17,7 +17,7 @@ export class OrderMapper {
         phone: apiOrder.customer.phone || '',
         address: apiOrder.detail.address
           ? this.mapAddress(apiOrder.detail.address)
-          : undefined,
+          : '',
       },
       deliveryType: apiOrder.detail.delivery ? 'delivery' : 'pickup',
       status: this.mapStatus(apiOrder.status),
@@ -25,7 +25,7 @@ export class OrderMapper {
       createdAt: new Date(apiOrder.created_at),
       paymentMethod: this.mapPaymentMethod(apiOrder.payment_method),
       paymentStatus: this.getPaymentStatus(apiOrder.status),
-      whatsappUrl: apiOrder.whatsapp_url,
+      // whatsappUrl: apiOrder.whatsapp_url, // Removido: não existe no tipo Order
     };
   }
 
@@ -153,7 +153,7 @@ export class OrderMapper {
       'pix': 'pix',
       'credit_card': 'card',
       'debit_card': 'card',
-      'cash': 'cash',
+      // 'cash' não é suportado, mapear para pix como fallback
     };
 
     return methodMap[apiMethod] || 'pix';

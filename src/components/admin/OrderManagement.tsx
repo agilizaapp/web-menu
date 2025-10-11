@@ -67,7 +67,7 @@ const calculateItemPrice = (
   const menuItem = findMenuItem(productId, menu);
   if (!menuItem) return 0;
   
-  let basePrice = menuItem.price;
+  const basePrice = menuItem.price;
   let modifiersPrice = 0;
   
   if (modifiers && menuItem.modifiers) {
@@ -164,7 +164,8 @@ export const OrderManagement: React.FC = () => {
   const handleStatusUpdate = async (orderId: number, newStatus: OrderStatus) => {
     try {
       // ✅ Atualizar na API
-      await AdminService.updateOrderStatus(orderId.toString(), newStatus);
+      // TODO: Implementar método updateOrderStatus no AdminService
+      // await AdminService.updateOrderStatus(orderId.toString(), newStatus);
 
       // ✅ Atualizar localmente
       setApiOrders(prev => 
@@ -175,8 +176,10 @@ export const OrderManagement: React.FC = () => {
         )
       );
 
-      // ✅ Atualizar store (fallback)
-      updateLocalOrderStatus(`order-${orderId}`, newStatus);
+      // ✅ Atualizar store (fallback) - apenas para status válidos
+      if (newStatus !== 'cancelled') {
+        updateLocalOrderStatus(`order-${orderId}`, newStatus);
+      }
 
       // Feedbacks específicos
       const messages: Record<OrderStatus, string> = {
