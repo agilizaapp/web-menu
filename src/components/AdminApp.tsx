@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useDemoMode } from '@/hooks/useDemoMode';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { OrderManagement } from './admin/OrderManagement';
+import { OrderManagement } from '@/components/admin/OrderManagement';
 import { MenuManagement } from './admin/MenuManagement';
 import { SettingsPanel } from './admin/SettingsPanel';
 import { Analytics } from './admin/Analytics';

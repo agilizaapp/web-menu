@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, Upload, X, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,13 +16,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useRestaurantStore } from '@/stores';
 import { toast } from 'sonner';
 import type { MenuItem } from '@/types/entities.types';
@@ -32,10 +25,12 @@ import type {
 } from '@/types/admin/product.types';
 import { ProductService } from '@/services/admin/product.service';
 import { ApiError } from '@/lib/utils/api-error';
-import { ModifierField } from './ModifierField';
+import { ModifierField } from '@/components/admin/ModifierField';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 export const MenuManagement: React.FC = () => {
-  const { menu, categories, addMenuItem, updateMenuItem, deleteMenuItem } =
+  // ✅ CORREÇÃO: Usar setCurrentRestaurant ao invés de addMenuItem/deleteMenuItem
+  const { menu, categories, currentRestaurant, setCurrentRestaurant } =
     useRestaurantStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,6 +63,7 @@ export const MenuManagement: React.FC = () => {
     setFormData({ ...item });
   };
 
+  // ✅ CORREÇÃO: Atualizar deleteMenuItem para usar setCurrentRestaurant
   const handleDelete = async (item: MenuItem) => {
     if (!window.confirm('Tem certeza que deseja deletar este item?')) {
       return;
@@ -75,7 +71,18 @@ export const MenuManagement: React.FC = () => {
 
     try {
       await ProductService.deleteProduct(item.id);
-      deleteMenuItem(item.id);
+
+      // ✅ Atualizar o menu removendo o item deletado
+      if (currentRestaurant) {
+        const updatedMenu = currentRestaurant.menu.filter(
+          (menuItem) => menuItem.id !== item.id
+        );
+        setCurrentRestaurant({
+          ...currentRestaurant,
+          menu: updatedMenu,
+        });
+      }
+
       toast.success('Item do cardápio deletado com sucesso');
     } catch (error) {
       if (error instanceof ApiError) {
@@ -83,21 +90,6 @@ export const MenuManagement: React.FC = () => {
       } else {
         toast.error('Erro ao deletar item');
       }
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          image: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
-      toast.success('Imagem enviada com sucesso');
     }
   };
 
@@ -113,10 +105,16 @@ export const MenuManagement: React.FC = () => {
       return;
     }
 
+    // ✅ Validar se tem imagem
+    if (!formData.image) {
+      toast.error('Por favor, adicione uma imagem do produto');
+      return;
+    }
+
     try {
       setIsSaving(true);
 
-      // Preparar payload
+      // ✅ Preparar payload com URL da Cloudinary
       const payload: ICreateProductPayload = {
         name: formData.name,
         description: formData.description,
@@ -128,36 +126,55 @@ export const MenuManagement: React.FC = () => {
       };
 
       if (editingItem) {
-        // ✅ Atualizar produto existente
+        // ✅ PUT /product/:id
         const response = await ProductService.updateProduct(
           editingItem.id,
           payload
         );
 
-        updateMenuItem({
-          ...editingItem,
-          ...payload,
-          id: editingItem.id,
-          modifiers: response.data.modifiers,
-        });
+        // ✅ Atualizar o menu com o item editado
+        if (currentRestaurant) {
+          const updatedMenu = currentRestaurant.menu.map((item) =>
+            item.id === editingItem.id
+              ? {
+                ...editingItem,
+                ...payload,
+                id: editingItem.id,
+                modifiers: response.data.modifiers,
+              }
+              : item
+          );
+          setCurrentRestaurant({
+            ...currentRestaurant,
+            menu: updatedMenu,
+          });
+        }
 
-        toast.success('Item do cardápio atualizado com sucesso');
+        toast.success('✅ Produto atualizado com sucesso');
       } else {
-        // ✅ Criar novo produto
+        // ✅ POST /product
         const response = await ProductService.createProduct(payload);
 
-        addMenuItem({
-          id: response.data.id,
-          name: response.data.name,
-          description: response.data.description,
-          category: response.data.category,
-          price: response.data.price,
-          image: response.data.image,
-          available: response.data.available,
-          modifiers: response.data.modifiers,
-        });
+        // ✅ Adicionar o novo item ao menu
+        if (currentRestaurant) {
+          const newMenuItem: MenuItem = {
+            id: response.data.id,
+            name: response.data.name,
+            description: response.data.description,
+            category: response.data.category,
+            price: response.data.price,
+            image: response.data.image,
+            available: response.data.available,
+            modifiers: response.data.modifiers,
+          };
 
-        toast.success('Item do cardápio adicionado com sucesso');
+          setCurrentRestaurant({
+            ...currentRestaurant,
+            menu: [...currentRestaurant.menu, newMenuItem],
+          });
+        }
+
+        toast.success('✅ Produto criado com sucesso');
       }
 
       // Resetar form
@@ -168,13 +185,14 @@ export const MenuManagement: React.FC = () => {
       if (error instanceof ApiError) {
         toast.error(error.message);
       } else {
-        toast.error('Erro ao salvar item do cardápio');
+        toast.error('Erro ao salvar produto');
       }
     } finally {
       setIsSaving(false);
     }
   };
 
+  // ✅ CORREÇÃO: Atualizar toggleAvailability para usar setCurrentRestaurant
   const toggleAvailability = async (item: MenuItem) => {
     try {
       const newAvailability = !item.available;
@@ -183,7 +201,18 @@ export const MenuManagement: React.FC = () => {
         available: newAvailability,
       });
 
-      updateMenuItem({ ...item, available: newAvailability });
+      // ✅ Atualizar o menu com a nova disponibilidade
+      if (currentRestaurant) {
+        const updatedMenu = currentRestaurant.menu.map((menuItem) =>
+          menuItem.id === item.id
+            ? { ...menuItem, available: newAvailability }
+            : menuItem
+        );
+        setCurrentRestaurant({
+          ...currentRestaurant,
+          menu: updatedMenu,
+        });
+      }
 
       toast.success(
         `Item ${newAvailability ? 'habilitado' : 'desabilitado'} com sucesso`
@@ -337,66 +366,29 @@ export const MenuManagement: React.FC = () => {
         <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {isAddingNew ? 'Adicionar Novo Item' : 'Editar Item do Cardápio'}
+              {isAddingNew ? 'Adicionar Novo Produto' : 'Editar Produto'}
             </DialogTitle>
             <DialogDescription>
               {isAddingNew
-                ? 'Crie um novo item do cardápio com fotos, preços e variações.'
-                : 'Atualize os detalhes, preços e disponibilidade deste item do cardápio.'}
+                ? 'Crie um novo produto com foto, preço e variações.'
+                : 'Atualize os detalhes do produto.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {/* Image Upload */}
+            {/* ✅ ImageUpload Component */}
             <div className="space-y-2">
-              <Label>Foto do Produto</Label>
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-                {formData.image ? (
-                  <div className="relative space-y-2">
-                    <img
-                      src={formData.image}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, image: '' }))
-                      }
-                    >
-                      Remover Imagem
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        Envie uma foto de alta qualidade do seu prato
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <Button variant="outline" asChild>
-                        <label
-                          htmlFor="image-upload"
-                          className="cursor-pointer"
-                        >
-                          Escolher Imagem
-                        </label>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <Label>Foto do Produto *</Label>
+              <ImageUpload
+                value={formData.image}
+                onChange={(url) =>
+                  setFormData((prev) => ({ ...prev, image: url }))
+                }
+                disabled={isSaving}
+              />
             </div>
 
-            {/* Basic Info */}
+            {/* Nome e Preço */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome do Produto *</Label>
@@ -407,6 +399,7 @@ export const MenuManagement: React.FC = () => {
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
                   placeholder="Ex: Pizza Margherita"
+                  disabled={isSaving}
                 />
               </div>
 
@@ -424,11 +417,12 @@ export const MenuManagement: React.FC = () => {
                     }))
                   }
                   placeholder="0,00"
+                  disabled={isSaving}
                 />
               </div>
             </div>
 
-            {/* Description */}
+            {/* Descrição */}
             <div className="space-y-2">
               <Label htmlFor="description">Descrição *</Label>
               <Textarea
@@ -442,10 +436,11 @@ export const MenuManagement: React.FC = () => {
                 }
                 placeholder="Descreva seu prato de forma atrativa..."
                 rows={3}
+                disabled={isSaving}
               />
             </div>
 
-            {/* Category & Availability */}
+            {/* Categoria e Disponibilidade */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Categoria *</Label>
@@ -453,12 +448,15 @@ export const MenuManagement: React.FC = () => {
                   id="category"
                   value={formData.category || ''}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, category: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
                   }
-                  placeholder="Ex: Pizzas, Bebidas, Sobremesas..."
+                  placeholder="Ex: Pizzas, Bebidas..."
                   maxLength={50}
+                  disabled={isSaving}
                 />
-                {/* ✅ NOVO: Sugestões de categorias existentes */}
                 {categories && (categories as string[]).length > 0 && (
                   <div className="text-xs text-muted-foreground">
                     <span className="font-medium">Categorias existentes:</span>{' '}
@@ -466,10 +464,14 @@ export const MenuManagement: React.FC = () => {
                       <button
                         key={cat}
                         type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, category: cat }))}
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, category: cat }))
+                        }
                         className="text-primary hover:underline mx-1"
+                        disabled={isSaving}
                       >
-                        {cat}{idx < (categories as string[]).length - 1 && ','}
+                        {cat}
+                        {idx < (categories as string[]).length - 1 && ','}
                       </button>
                     ))}
                   </div>
@@ -484,6 +486,7 @@ export const MenuManagement: React.FC = () => {
                     onCheckedChange={(checked) =>
                       setFormData((prev) => ({ ...prev, available: checked }))
                     }
+                    disabled={isSaving}
                   />
                   <span className="text-sm">
                     {formData.available ? 'Disponível' : 'Indisponível'}
@@ -492,7 +495,7 @@ export const MenuManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ NOVO: Campo de Modificadores */}
+            {/* Modificadores */}
             <ModifierField
               modifiers={formData.modifiers || []}
               onChange={(modifiers) =>
@@ -500,7 +503,7 @@ export const MenuManagement: React.FC = () => {
               }
             />
 
-            {/* Action Buttons */}
+            {/* Botões de Ação */}
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 variant="outline"
@@ -520,7 +523,7 @@ export const MenuManagement: React.FC = () => {
                     Salvando...
                   </>
                 ) : (
-                  <>{isAddingNew ? 'Adicionar Item' : 'Salvar Alterações'}</>
+                  <>{isAddingNew ? 'Criar Produto' : 'Salvar Alterações'}</>
                 )}
               </Button>
             </div>

@@ -19,18 +19,18 @@ import { ApiError } from '@/lib/utils/api-error';
 // Helper function to format address for display
 const formatAddress = (address: IOrderAddress | undefined): string => {
   if (!address) return 'Retirada no local';
-  
+
   const parts = [
     address.street,
     address.number,
     address.neighborhood,
     address.postalCode
   ].filter(Boolean);
-  
+
   if (address.complement) {
     parts.push(`(${address.complement})`);
   }
-  
+
   return parts.join(', ') || 'Endereço não informado';
 };
 
@@ -41,16 +41,16 @@ const findMenuItem = (productId: number, menu: MenuItem[]): MenuItem | null => {
 
 // ✅ ATUALIZADO: Helper para formatar modificadores
 const formatModifiers = (
-  modifiers: IOrderApi['detail']['items'][0]['modifiers'], 
+  modifiers: IOrderApi['detail']['items'][0]['modifiers'],
   menuItem: MenuItem | null
 ): string => {
   if (!modifiers || modifiers.length === 0) return '';
-  
+
   // Se não temos o menuItem, retorna vazio (não podemos buscar nomes)
   if (!menuItem?.modifiers) return '';
-  
+
   const modifierNames: string[] = [];
-  
+
   modifiers.forEach(mod => {
     const modifierGroup = menuItem.modifiers?.find(g => g.id === mod.modifier_id);
     if (modifierGroup) {
@@ -60,7 +60,7 @@ const formatModifiers = (
       }
     }
   });
-  
+
   return modifierNames.length > 0 ? modifierNames.join(', ') : '';
 };
 
@@ -73,7 +73,7 @@ const calculateItemTotal = (
 ): number => {
   // O preço base já vem da API
   let itemPrice = price;
-  
+
   // Adicionar preço dos modificadores (se disponível no menu)
   if (modifiers && menuItem?.modifiers) {
     modifiers.forEach(mod => {
@@ -86,7 +86,7 @@ const calculateItemTotal = (
       }
     });
   }
-  
+
   return itemPrice * quantity;
 };
 
@@ -106,7 +106,7 @@ const formatPaymentMethod = (method: string): string => {
 export const OrderManagement: React.FC = () => {
   const { menu } = useRestaurantStore();
   const { updateOrderStatus: updateLocalOrderStatus } = useOrderStore();
-  
+
   const [filter, setFilter] = useState<'all' | OrderStatus>('all');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,7 +150,7 @@ export const OrderManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Erro ao buscar pedidos:', error);
-      
+
       if (error instanceof ApiError) {
         toast.error(error.message);
       } else {
@@ -162,8 +162,8 @@ export const OrderManagement: React.FC = () => {
     }
   };
 
-  const filteredOrders = filter === 'all' 
-    ? apiOrders 
+  const filteredOrders = filter === 'all'
+    ? apiOrders
     : apiOrders.filter(order => order.status === filter);
 
   const handleStatusUpdate = async (orderId: number, newStatus: OrderStatus) => {
@@ -173,10 +173,10 @@ export const OrderManagement: React.FC = () => {
       // TODO: Implementar método updateOrderStatus no AdminService
       // await AdminService.updateOrderStatus(orderId, newStatus);
 
-      setApiOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, status: newStatus } 
+      setApiOrders(prev =>
+        prev.map(order =>
+          order.id === orderId
+            ? { ...order, status: newStatus }
             : order
         )
       );
@@ -199,7 +199,7 @@ export const OrderManagement: React.FC = () => {
       toast.success(messages[newStatus] || 'Status atualizado');
     } catch (error) {
       console.error('❌ Erro ao atualizar status:', error);
-      
+
       if (error instanceof ApiError) {
         toast.error(error.message);
       } else {
@@ -272,7 +272,7 @@ export const OrderManagement: React.FC = () => {
             Gerencie pedidos recebidos e atualize seus status
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -292,7 +292,7 @@ export const OrderManagement: React.FC = () => {
             <Bell className="w-4 h-4 mr-2" />
             Som {soundEnabled ? 'Ligado' : 'Desligado'}
           </Button>
-          
+
           <Select value={filter} onValueChange={(value) => setFilter(value as typeof filter)}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -317,7 +317,7 @@ export const OrderManagement: React.FC = () => {
             <div className="text-4xl mb-4">📋</div>
             <h3 className="text-lg font-semibold mb-2">Nenhum Pedido Encontrado</h3>
             <p className="text-muted-foreground">
-              {filter === 'all' 
+              {filter === 'all'
                 ? "Nenhum pedido foi realizado ainda hoje."
                 : `Nenhum pedido com status "${getStatusLabel(filter)}" encontrado.`
               }
@@ -328,10 +328,10 @@ export const OrderManagement: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredOrders.map(order => {
             const orderLoading = isOrderLoading(order.id);
-            
+
             return (
-              <Card 
-                key={order.id} 
+              <Card
+                key={order.id}
                 className={`
                   ${order.status === 'pending' ? 'ring-2 ring-yellow-500 ring-offset-2' : ''}
                   ${orderLoading ? 'opacity-60 pointer-events-none' : ''}
@@ -369,7 +369,7 @@ export const OrderManagement: React.FC = () => {
                     <div className="flex items-start gap-2 text-sm text-muted-foreground">
                       <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
                       <span className="line-clamp-2">
-                        {order.detail.delivery 
+                        {order.detail.delivery
                           ? formatAddress(order.detail.address)
                           : 'Retirada no local'
                         }
@@ -388,7 +388,7 @@ export const OrderManagement: React.FC = () => {
                       const modifiersText = formatModifiers(item.modifiers, menuItem);
                       // Usar price e quantity da API
                       const itemTotal = calculateItemTotal(item.price, item.quantity, item.modifiers, menuItem);
-                      
+
                       return (
                         <div key={`${item.product_id}-${index}`} className="space-y-1">
                           <div className="flex justify-between text-sm">
@@ -398,9 +398,9 @@ export const OrderManagement: React.FC = () => {
                               {item.name}
                             </span>
                             <span className="font-medium ml-2">
-                              R$ {itemTotal.toLocaleString("pt-BR", { 
-                                minimumFractionDigits: 2, 
-                                maximumFractionDigits: 2 
+                              R$ {itemTotal.toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
                               })}
                             </span>
                           </div>
@@ -436,9 +436,9 @@ export const OrderManagement: React.FC = () => {
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
                     <span className="text-lg">
-                      R$ {order.amount.toLocaleString("pt-BR", { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
+                      R$ {order.amount.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
                       })}
                     </span>
                   </div>
