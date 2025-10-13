@@ -30,7 +30,17 @@ export const AdminApp: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{currentRestaurant?.theme?.logo}</span>
+              {/* {
+                currentRestaurant?.theme?.logo ? (
+                  <img
+                    src={currentRestaurant?.theme?.logo}
+                    alt={`Logo do restaurante ${currentRestaurant?.theme?.name}`}
+                    className="w-full h-full object-cover"
+                    width={60}
+                    height={60}
+                  />
+                ) : null
+              } */}
               <div>
                 <h1 className="text-xl font-semibold">
                   Admin {currentRestaurant?.theme?.name}
