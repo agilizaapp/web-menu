@@ -70,9 +70,6 @@ export const RestaurantSelector: React.FC<RestaurantSelectorProps> = ({ onSelect
                       style={{ backgroundColor: restaurant.theme.accentColor }}
                       title="Cor de Destaque"
                     />
-                    <Badge variant="outline" className="ml-auto">
-                      Entrega: R$ {restaurant.settings.deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </Badge>
                   </div>
 
                   {/* Action Buttons */}

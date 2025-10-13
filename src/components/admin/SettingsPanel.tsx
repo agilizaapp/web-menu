@@ -29,7 +29,6 @@ export const SettingsPanel: React.FC = () => {
     hours: currentRestaurant?.settings?.hours || '',
     useCustomHours: currentRestaurant?.settings?.useCustomHours || false,
     customHours: currentRestaurant?.settings?.customHours || defaultSchedule,
-    deliveryFee: currentRestaurant?.settings?.deliveryFee || 0,
     pixKey: currentRestaurant?.settings?.pixKey || '',
     primaryColor: currentRestaurant?.theme.primaryColor || '#DC2626',
     secondaryColor: currentRestaurant?.theme.secondaryColor || '#FEF2F2',
@@ -57,7 +56,6 @@ export const SettingsPanel: React.FC = () => {
         hours: formData.hours,
         useCustomHours: formData.useCustomHours,
         customHours: formData.customHours,
-        deliveryFee: formData.deliveryFee,
         pixKey: formData.pixKey
       }
     };
@@ -390,18 +388,6 @@ export const SettingsPanel: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="deliveryFee">Taxa de Entrega (R$)</Label>
-                <Input
-                  id="deliveryFee"
-                  type="number"
-                  step="0.01"
-                  value={formData.deliveryFee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, deliveryFee: parseFloat(e.target.value) || 0 }))}
-                  placeholder="5.00"
-                />
-              </div>
 
               <Button onClick={() => handleSave('Operações')} className="w-full">
                 <Save className="w-4 h-4 mr-2" />

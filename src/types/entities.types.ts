@@ -24,7 +24,7 @@ export interface RestaurantSettings {
   hours: string;
   useCustomHours?: boolean;
   customHours?: WeeklySchedule;
-  deliveryFee: number;
+  deliverySettings?: DeliverySettings[];
   deliveryZones: string[];
   pixKey: string;
   phone?: string;
@@ -32,12 +32,18 @@ export interface RestaurantSettings {
   pickUpLocation?: {
     label: string;
     mapsUrl: string;
+    distance?: number; // Distância em metros (quando endereço do cliente está mascarado)
   };
   minimumOrder?: number;
   estimatedDeliveryTime?: string;
   paymentMethods?: PaymentMethod[];
   isOpen?: boolean;
   acceptingOrders?: boolean;
+}
+
+export interface DeliverySettings {
+  distance: number; // em metros
+  value: number; // em reais
 }
 
 export type PaymentMethod = 'pix' | 'credit-card' | 'debit-card' | 'cash';

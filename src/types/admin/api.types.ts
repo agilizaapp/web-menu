@@ -131,7 +131,8 @@ export interface IStoreConfigs {
         saturday: DayScheduleApi;
         sunday: DayScheduleApi;
       };
-      deliveryFee: number;
+      deliveryFee?: number; // Legacy field, pode não existir mais
+      deliverySettings?: Array<{ distance: number; value: number }>; // Novo formato
       deliveryZones: string[];
       pixKey: string;
     };

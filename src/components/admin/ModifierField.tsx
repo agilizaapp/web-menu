@@ -123,7 +123,7 @@ export const ModifierField: React.FC<ModifierFieldProps> = ({
             Nenhuma variação adicionada
           </p>
           <p className="text-xs text-muted-foreground">
-            Clique em "Adicionar Grupo" para criar variações
+            Clique em &quot;Adicionar Grupo&quot; para criar variações
           </p>
         </Card>
       ) : (

@@ -11,6 +11,8 @@ interface CheckoutFormData {
   deliveryType: 'delivery' | 'pickup';
   address: AddressData | string;
   paymentMethod: 'pix' | 'card';
+  deliveryFee?: number; // Taxa de entrega calculada
+  distance?: number; // Distância em metros para enviar ao backend
 }
 
 /**
@@ -92,7 +94,7 @@ export function createOrderPayload(
       },
     };
 
-    // Só envia customer.address se for entrega E o endereço foi modificado
+    // Só envia customer.address se for entrega E (endereço foi modificado OU tem distance)
     if (checkoutData.deliveryType === 'delivery' && currentAddress) {
       const addressWasModified = !originalAddress || 
         originalAddress.street !== currentAddress.street ||
@@ -101,10 +103,20 @@ export function createOrderPayload(
         originalAddress.postalCode !== currentAddress.postalCode ||
         originalAddress.complement !== currentAddress.complement;
 
-      if (addressWasModified) {
-        // Apenas o address, sem phone, name, etc
+      // Envia address se foi modificado OU se temos distance para enviar
+      if (addressWasModified || checkoutData.distance) {
+        // Incluir distance no address se existir
+        const addressWithDistance: AddressData = {
+          ...currentAddress,
+        };
+        
+        // Adiciona distance se existir
+        if (checkoutData.distance) {
+          addressWithDistance.distance = checkoutData.distance;
+        }
+        
         payload.customer = {
-          address: currentAddress,
+          address: addressWithDistance,
         } as { address: AddressData };
       }
     }
@@ -129,7 +141,16 @@ export function createOrderPayload(
   // Adiciona endereço somente se for entrega
   if (checkoutData.deliveryType === 'delivery') {
     if (typeof checkoutData.address === 'object') {
-      payload.customer!.address = checkoutData.address;
+      const addressWithDistance: AddressData = {
+        ...checkoutData.address,
+      };
+      
+      // Adiciona distance se existir
+      if (checkoutData.distance) {
+        addressWithDistance.distance = checkoutData.distance;
+      }
+      
+      payload.customer!.address = addressWithDistance;
     }
   }
 

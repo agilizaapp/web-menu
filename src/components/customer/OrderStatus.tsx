@@ -216,10 +216,10 @@ export const OrderStatus: React.FC<OrderStatusProps> = ({ orderId, onBackToMenu 
                 <span>Subtotal</span>
                 <span>R$ {order.items.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-              {order.deliveryType === 'delivery' && (
+              {order.deliveryType === 'delivery' && order.deliveryFee && (
                 <div className="flex justify-between">
                   <span>Taxa de Entrega</span>
-                  <span>R$ {currentRestaurant.settings.deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>R$ {order.deliveryFee.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )}
             </div>
