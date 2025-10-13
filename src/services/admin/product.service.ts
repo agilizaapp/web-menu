@@ -23,7 +23,7 @@ export class ProductService {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError('Erro ao criar produto', 'CREATE_PRODUCT_ERROR');
+      throw new ApiError('Erro ao criar produto', 500);
     }
   }
 
@@ -44,7 +44,7 @@ export class ProductService {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError('Erro ao atualizar produto', 'UPDATE_PRODUCT_ERROR');
+      throw new ApiError('Erro ao atualizar produto', 500);
     }
   }
 
@@ -58,7 +58,7 @@ export class ProductService {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError('Erro ao deletar produto', 'DELETE_PRODUCT_ERROR');
+      throw new ApiError('Erro ao deletar produto', 500);
     }
   }
 }

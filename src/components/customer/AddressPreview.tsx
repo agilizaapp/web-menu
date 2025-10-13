@@ -55,8 +55,10 @@ export const AddressPreview: React.FC<AddressPreviewProps> = ({
       let hasErrors = false;
 
       (Object.keys(editedAddress) as Array<keyof AddressData>).forEach((field) => {
-        if (field !== 'complement') {
-          const error = onValidate(field, editedAddress[field] || '');
+        // Pular campos opcionais e numéricos
+        if (field !== 'complement' && field !== 'distance') {
+          const fieldValue = editedAddress[field];
+          const error = onValidate(field, typeof fieldValue === 'string' ? fieldValue : String(fieldValue || ''));
           if (error) {
             validationErrors[field] = error;
             hasErrors = true;

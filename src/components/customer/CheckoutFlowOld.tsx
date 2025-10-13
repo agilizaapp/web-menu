@@ -50,7 +50,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [isExpired, setIsExpired] = useState(false);
 
   const cartTotal = getTotalCartPrice();
-  const deliveryFee = currentRestaurant?.settings?.deliveryFee || 0;
+  const deliveryFee = 0; // Taxa de entrega será calculada dinamicamente
   //const tax = cartTotal * 0.1;
   const finalTotal = cartTotal + deliveryFee;
 

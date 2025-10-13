@@ -280,7 +280,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         } else {
           toast.warning('⚠️ CEP não encontrado. Preencha manualmente.');
         }
-      } catch (error) {
+      } catch {
         toast.error('❌ Erro ao buscar CEP');
       } finally {
         setIsLoadingCEP(false);

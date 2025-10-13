@@ -143,7 +143,7 @@ export const mockRestaurantData: Restaurant = {
     hours: restaurant.store.configs.settings.hours,
     useCustomHours: restaurant.store.configs.settings.useCustomHours,
     customHours: restaurant.store.configs.settings.customHours,
-    deliveryFee: restaurant.store.configs.settings.deliveryFee,
+    deliverySettings: restaurant.store.configs.settings.deliverySettings || [],
     deliveryZones: restaurant.store.configs.settings.deliveryZones,
     pixKey: restaurant.store.configs.settings.pixKey,
   },
@@ -173,7 +173,11 @@ export const mockRestaurants: Restaurant[] = [
         saturday: { open: '12:00', close: '00:00', closed: false },
         sunday: { open: '12:00', close: '22:00', closed: false }
       },
-      deliveryFee: 5.00,
+      deliverySettings: [
+        { distance: 5000, value: 10 },
+        { distance: 3000, value: 7 },
+        { distance: 0, value: 5 }
+      ],
       deliveryZones: ['Centro', 'Zona Sul', 'Zona Norte'],
       pixKey: 'pizzapalace@bank.com'
     },
@@ -201,7 +205,11 @@ export const mockRestaurants: Restaurant[] = [
         saturday: { open: '12:00', close: '23:00', closed: false },
         sunday: { open: '12:00', close: '20:00', closed: false }
       },
-      deliveryFee: 8.00,
+      deliverySettings: [
+        { distance: 5000, value: 12 },
+        { distance: 3000, value: 10 },
+        { distance: 0, value: 8 }
+      ],
       deliveryZones: ['Centro', 'Bairro Comercial'],
       pixKey: 'sushihouse@bank.com'
     },
@@ -220,7 +228,11 @@ export const mockRestaurants: Restaurant[] = [
     settings: {
       hours: '10:00 - 00:00',
       useCustomHours: false,
-      deliveryFee: 3.50,
+      deliverySettings: [
+        { distance: 5000, value: 7 },
+        { distance: 3000, value: 5 },
+        { distance: 0, value: 3.50 }
+      ],
       deliveryZones: ['Todas as Regiões'],
       pixKey: 'burgerbarn@bank.com'
     },

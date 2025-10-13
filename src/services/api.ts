@@ -167,8 +167,8 @@ export const apiService = {
         hasToken: !!customerToken,
         payload: {
           hasCustomer: !!payload.customer,
-          customerHasAddress: !!(payload.customer as any)?.address,
-          addressHasDistance: !!(payload.customer as any)?.address?.distance,
+          customerHasAddress: !!(payload.customer as { address?: unknown })?.address,
+          addressHasDistance: !!(payload.customer as { address?: { distance?: number } })?.address?.distance,
           order: {
             itemCount: payload.order.items.length,
             delivery: payload.order.delivery,
@@ -196,11 +196,11 @@ export const apiService = {
         console.error('❌ Resposta de erro (texto):', responseText);
         
         // Tentar parsear como JSON
-        let errorData: any = {};
+        let errorData: { error?: { message?: string }; message?: string } = {};
         try {
           errorData = JSON.parse(responseText);
           console.error('❌ Resposta de erro (JSON):', errorData);
-        } catch (parseError) {
+        } catch {
           console.error('❌ Não foi possível parsear erro como JSON');
           console.error('❌ Conteúdo bruto:', responseText.substring(0, 500));
         }
