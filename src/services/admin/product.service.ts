@@ -75,7 +75,7 @@ export class ProductService {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError('Erro ao buscar produto', 'GET_PRODUCT_ERROR');
+      throw new ApiError('Erro ao buscar produto', 500);
     }
   }
 }
