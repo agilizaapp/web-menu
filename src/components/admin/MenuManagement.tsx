@@ -472,7 +472,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
                 deleteConfirmText.trim().toLowerCase() !==
                 deletingItem?.name.trim().toLowerCase() && (
                   <p className="text-xs text-destructive">
-                    ⚠️ Nome incorreto. Digite exatamente: "{deletingItem?.name}"
+                    ⚠️ Nome incorreto. Digite exatamente: &quot;{deletingItem?.name}&quot;
                   </p>
                 )}
             </AlertDialogDescription>
