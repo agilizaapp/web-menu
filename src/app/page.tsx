@@ -113,25 +113,32 @@ export default function Page() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="relative w-48 h-48 mx-auto">
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            className="w-full h-full object-contain"
-          >
-            <source src="/videos/delivery-app-loading.mp4" type="video/mp4" />
-            {/* Fallback para navegadores antigos */}
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          </video>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="relative w-48 h-48 mx-auto">
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              className="w-full h-full object-contain"
+            >
+              <source src="/videos/delivery-app-loading.mp4" type="video/mp4" />
+              {/* Fallback para navegadores antigos */}
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            </video>
+          </div>
+            <LoaderCircle className="animate-spin rounded-full h-12 w-12 mx-auto mb-4" />
+            <p className="text-muted-foreground">Buscando os melhores pratos para você...</p>
+          </div>
         </div>
-          <LoaderCircle className="animate-spin rounded-full h-12 w-12 mx-auto mb-4" />
-          <p className="text-muted-foreground">Buscando os melhores pratos para você...</p>
+        
+        {/* Versão no rodapé */}
+        <div className="pb-8">
+          <p className="text-xs text-muted-foreground/50">v0.1.1</p>
         </div>
       </div>
     );
