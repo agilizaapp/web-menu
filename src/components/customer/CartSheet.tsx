@@ -32,7 +32,9 @@ export const CartSheet: React.FC<CartSheetProps> = ({ onCheckout }) => {
 
   const cartCount = getCartItemCount();
   const cartTotal = getTotalCartPrice();
-  const deliveryFee = currentRestaurant?.settings?.deliveryFee || 0;
+  // deliverySettings é array - não mostrar taxa fixa no carrinho
+  // O cálculo real será feito no CheckoutPage baseado na distância
+  const deliveryFee = 0; // Não exibir taxa no carrinho, apenas no checkout
   const tax = cartTotal * 0.1; // 10% tax
   const finalTotal = cartTotal + deliveryFee;
 

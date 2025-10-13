@@ -10,8 +10,11 @@ import { useCartStore, useRestaurantStore, useCustomerStore } from "@/stores";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import { AddressPreview } from "./AddressPreview";
 import { LocationMapModal } from "./LocationMapModal";
+import { DeliveryFeeInfo } from "./DeliveryFeeInfo";
 import type { AddressData } from "@/types";
+import type { DeliverySettings } from "@/types/entities.types";
 import { fetchAddressByCEP, formatCEP, isValidCEP } from "@/services/viaCEP";
+import { calculateDistance, calculateDeliveryFee } from "@/services/distance.service";
 import { cookieService } from "@/services/cookies";
 import { toast } from "sonner";
 
@@ -29,6 +32,8 @@ interface CheckoutPageProps {
     deliveryType: "delivery" | "pickup";
     address: AddressData | string;
     paymentMethod: "pix" | "card";
+    deliveryFee?: number; // Taxa de entrega calculada
+    distance?: number; // Distância em metros para enviar ao backend
   }) => void;
 }
 
@@ -55,6 +60,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [isLoadingCEP, setIsLoadingCEP] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState<number>(0);
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
+  const [deliveryDistance, setDeliveryDistance] = useState<number | null>(null); // em km para exibição
+  const [deliveryDistanceInMeters, setDeliveryDistanceInMeters] = useState<number | null>(null); // em metros para payload
 
   // Preencher endereço automaticamente se vier do store (cliente autenticado com endereço salvo)
   useEffect(() => {
@@ -65,14 +74,117 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         neighborhood: savedAddress.neighborhood || "",
         postalCode: savedAddress.postalCode || "",
         complement: savedAddress.complement || "",
+        distance: savedAddress.distance, // ✅ Preservar distância da API
       });
-      toast.success("Endereço carregado automaticamente!");
     }
   }, [savedAddress]);
 
+  // Calcular taxa de entrega baseada na distância
+  useEffect(() => {
+    const calculateDistanceAndFee = async () => {
+      if (deliveryType !== "delivery") {
+        setCalculatedDeliveryFee(0);
+        setDeliveryDistance(null);
+        setDeliveryDistanceInMeters(null);
+        return;
+      }
+
+      // Verificar se temos endereço completo e pickUpLocation
+      const hasCompleteAddress = addressData.street && addressData.number && addressData.neighborhood;
+      const pickUpLocation = currentRestaurant?.settings?.pickUpLocation?.label;
+      
+      // FONTES DE DISTÂNCIA (em ordem de prioridade):
+      // 1. Distância do endereço do customer (retornada por /customer/{phone})
+      const customerAddressDistance = addressData.distance;
+      // 2. Distância do pickUpLocation (retornada por /restaurant/{slug})
+      const apiDistance = currentRestaurant?.settings?.pickUpLocation?.distance;
+
+      if (!hasCompleteAddress || !pickUpLocation) {
+        return;
+      }
+
+      // Se deliverySettings existe (tabela de taxas por distância)
+      if (Array.isArray(currentRestaurant?.settings?.deliverySettings)) {
+        setIsCalculatingDistance(true);
+
+        try {
+          let distanceInMeters: number;
+          let distanceInKm: number;
+
+          // PRIORIDADE 1: Distância do endereço do customer
+          if (customerAddressDistance && customerAddressDistance > 0) {
+            distanceInMeters = customerAddressDistance;
+            distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
+          }
+          // PRIORIDADE 2: Distância do pickUpLocation (API do restaurante)
+          else if (apiDistance && apiDistance > 0) {
+            distanceInMeters = apiDistance;
+            distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
+          } 
+          // PRIORIDADE 3: Calcular via geocoding (somente se endereço NÃO estiver mascarado)
+          else {
+            const customerAddress = `${addressData.street}, ${addressData.number}, ${addressData.neighborhood}, ${addressData.postalCode}`;
+            
+            // Verificar se o endereço está mascarado
+            const isAddressMasked = (address: string): boolean => {
+              return address.includes('*') || address.includes('...');
+            };
+            
+            if (isAddressMasked(customerAddress)) {
+              // Endereço mascarado SEM distance da API = não é possível calcular
+              throw new Error('Endereço mascarado - distância não disponível');
+            }
+            
+            // Endereço completo = pode fazer geocoding
+            const result = await calculateDistance(pickUpLocation, customerAddress);
+            
+            distanceInMeters = result.distanceInMeters;
+            distanceInKm = result.distanceInKm;
+          }
+
+          // Atualizar estados com a distância obtida
+          setDeliveryDistance(distanceInKm);
+          setDeliveryDistanceInMeters(distanceInMeters);
+          
+          // Calcular taxa baseada na distância
+          const fee = calculateDeliveryFee(distanceInMeters, currentRestaurant.settings.deliverySettings);
+          setCalculatedDeliveryFee(fee);
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          
+          // Verificar se o erro é de endereço mascarado
+          const isMaskedError = errorMessage.includes('mascarado') || errorMessage.includes('Endereço mascarado');
+          
+          if (isMaskedError) {
+            toast.warning(
+              `⚠️ Endereço protegido detectado. Utilizando taxa mínima de entrega.`,
+              { duration: 4000 }
+            );
+          } else {
+            toast.error(
+              `Não foi possível calcular a distância exata. ${errorMessage}. Usando taxa mínima.`,
+              { duration: 5000 }
+            );
+          }
+          
+          // Usar a menor taxa como fallback
+          const minFee = Math.min(...currentRestaurant.settings.deliverySettings.map(t => t.value));
+          setCalculatedDeliveryFee(minFee);
+          setDeliveryDistance(null);
+          setDeliveryDistanceInMeters(null);
+        } finally {
+          setIsCalculatingDistance(false);
+        }
+      }
+    };
+
+    calculateDistanceAndFee();
+  }, [deliveryType, addressData, currentRestaurant?.settings?.deliverySettings, currentRestaurant?.settings?.pickUpLocation]);
+
   const cartTotal = getTotalCartPrice();
-  const deliveryFee = deliveryType === "delivery" ? (currentRestaurant?.settings?.deliveryFee || 0) : 0;
-  const deliveryToShow = currentRestaurant?.settings?.deliveryFee || 0;
+  const deliveryFee = deliveryType === "delivery" ? calculatedDeliveryFee : 0;
+  const deliveryToShow = calculatedDeliveryFee;
   const finalTotal = cartTotal + deliveryFee;
 
   // Usar pickUpLocation se disponível, senão fallback para address
@@ -165,13 +277,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             neighborhood: prev.neighborhood || address.bairro || '',
             // Mantém número e complemento do usuário
           }));
-
-          toast.success('✅ CEP encontrado!');
         } else {
           toast.warning('⚠️ CEP não encontrado. Preencha manualmente.');
         }
       } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
         toast.error('❌ Erro ao buscar CEP');
       } finally {
         setIsLoadingCEP(false);
@@ -191,8 +300,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     let isValid = true;
 
     (Object.keys(addressData) as Array<keyof AddressData>).forEach(field => {
-      if (field !== 'complement') { // Complement é opcional
-        const error = validateAddressField(field, addressData[field] || '');
+      // Ignorar campos opcionais e distance (vem da API)
+      if (field !== 'complement' && field !== 'distance') {
+        const fieldValue = addressData[field];
+        const error = validateAddressField(field, typeof fieldValue === 'string' ? fieldValue : '');
         if (error) {
           errors[field] = error;
           isValid = false;
@@ -212,11 +323,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       }
     }
 
-    onProceedToPayment({
+    const paymentData = {
       deliveryType,
       address: deliveryType === "delivery" ? addressData : restaurantAddress,
       paymentMethod,
-    });
+      deliveryFee: deliveryType === "delivery" ? calculatedDeliveryFee : undefined,
+      distance: deliveryType === "delivery" && deliveryDistanceInMeters !== null 
+        ? deliveryDistanceInMeters 
+        : undefined,
+    };
+
+    onProceedToPayment(paymentData);
   };
 
   return (
@@ -270,10 +387,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <Label htmlFor="delivery" className="flex-1 cursor-pointer">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium">Entrega</p>
                       <p className="text-xs text-muted-foreground">
-                        Taxa: R$ {deliveryToShow.toFixed(2)}
+                        {isCalculatingDistance ? (
+                          <span className="flex items-center gap-1">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Calculando...
+                          </span>
+                        ) : deliveryDistance !== null ? (
+                          <>
+                            {/* {deliveryDistance.toFixed(2)}km - R$ {deliveryToShow.toFixed(2)} */}
+                          </>
+                        ) : (
+                          <>
+                          {/* Taxa: R$ {deliveryToShow.toFixed(2)} */}
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -295,6 +425,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </Label>
               </div>
             </RadioGroup>
+
+            {/* Informação de Taxas de Entrega (quando tem tabela) */}
+            {/* {deliveryType === "delivery" && 
+             Array.isArray(currentRestaurant?.settings?.deliverySettings) && 
+             currentRestaurant.settings.deliverySettings.length > 0 && (
+              <DeliveryFeeInfo deliverySettings={currentRestaurant.settings.deliverySettings} />
+            )} */}
 
             {/* Endereço de Retirada (quando pickup)
             {deliveryType === "pickup" && (
@@ -362,7 +499,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     address={addressData}
                     onAddressChange={(newAddress) => {
                       setAddressData(newAddress);
-                      toast.success("Endereço atualizado!");
                     }}
                     errors={addressErrors}
                     onValidate={validateAddressField}
@@ -692,7 +828,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               {deliveryType === "delivery" && (
                 <div className="flex justify-between text-sm">
                   <span>Taxa de Entrega</span>
-                  <span>R$ {deliveryFee.toFixed(2)}</span>
+                  {isCalculatingDistance ? (
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Calculando...
+                    </span>
+                  ) : (
+                    <span>R$ {deliveryFee.toFixed(2)}</span>
+                  )}
                 </div>
               )}
               <Separator />
@@ -723,9 +866,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   className="flex-1 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                   style={{ backgroundColor: "var(--restaurant-primary)" }}
                   onClick={handleProceedToPayment}
-                  disabled={isEditingAddress}
+                  disabled={isEditingAddress || isCalculatingDistance}
                 >
-                  Ir para Pagamento
+                  {isCalculatingDistance ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Calculando taxa...
+                    </>
+                  ) : (
+                    'Ir para Pagamento'
+                  )}
                 </Button>
               </div>
             </div>

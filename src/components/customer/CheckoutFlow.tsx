@@ -23,6 +23,8 @@ interface CheckoutData {
   deliveryType: "delivery" | "pickup";
   address: string | AddressData;
   paymentMethod: "pix" | "card";
+  deliveryFee?: number; // Taxa de entrega calculada
+  distance?: number; // Distância em metros para enviar ao backend
 }
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({

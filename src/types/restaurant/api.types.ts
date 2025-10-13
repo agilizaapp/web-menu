@@ -1,4 +1,4 @@
-import { MenuCategory, MenuItem } from '../entities.types';
+import { MenuCategory, MenuItem, DeliverySettings } from '../entities.types';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -76,13 +76,14 @@ export interface IStoreConfigs {
         saturday: DayScheduleApi;
         sunday: DayScheduleApi;
       };
-      deliveryFee: number;
+      deliverySettings?: DeliverySettings[];
       deliveryZones: string[];
       pixKey: string;
       address?: string;
       pickUpLocation?: {
         label: string;
         mapsUrl: string;
+        distance?: number; // Distância em metros (quando endereço do cliente está mascarado)
       };
     };
   };

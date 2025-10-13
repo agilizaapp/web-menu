@@ -56,6 +56,7 @@ export interface AddressData {
   neighborhood: string;
   postalCode: string;
   complement?: string;
+  distance?: number; // Distância em metros (retornada pela API quando endereço está mascarado)
 }
 
 export interface Order {
@@ -69,6 +70,8 @@ export interface Order {
     address: string | AddressData;
   };
   deliveryType: 'delivery' | 'pickup';
+  deliveryFee?: number; // Taxa de entrega calculada
+  distance?: number; // Distância em metros (para enviar ao backend)
   status: 'pending' | 'confirmed' | 'in_progress' | 'prepared' | 'finished' | 'cancelled';
   totalAmount: number;
   createdAt: Date | string;

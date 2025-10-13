@@ -33,6 +33,8 @@ interface CheckoutData {
   deliveryType: "delivery" | "pickup";
   address: AddressData | string;
   paymentMethod: "pix" | "card";
+  deliveryFee?: number; // Taxa de entrega calculada
+  distance?: number; // Distância em metros para enviar ao backend
 }
 
 interface PaymentFlowProps {
@@ -74,10 +76,7 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
   } | null>(null);
 
   const cartTotal = getTotalCartPrice();
-  const deliveryFee =
-    checkoutData.deliveryType === "delivery"
-      ? currentRestaurant?.settings?.deliveryFee || 0
-      : 0;
+  const deliveryFee = checkoutData.deliveryFee || 0;
   const finalTotal = cartTotal + deliveryFee;
 
   // Criar pedido na API quando o componente montar (APENAS PARA PIX)
@@ -295,6 +294,8 @@ export const PaymentFlow: React.FC<PaymentFlowProps> = ({
           address: checkoutData.address,
         },
         deliveryType: checkoutData.deliveryType,
+        deliveryFee: checkoutData.deliveryFee,
+        distance: checkoutData.distance,
         status: "pending" as const,
         totalAmount: finalTotal,
         createdAt: new Date(),

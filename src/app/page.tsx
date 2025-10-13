@@ -64,7 +64,7 @@ export default function Page() {
               hours: restaurant.store.configs.settings.hours,
               useCustomHours: restaurant.store.configs.settings.useCustomHours,
               customHours: restaurant.store.configs.settings.customHours,
-              deliveryFee: restaurant.store.configs.settings.deliveryFee,
+              deliverySettings: restaurant.store.configs.settings.deliverySettings,
               deliveryZones: restaurant.store.configs.settings.deliveryZones,
               pixKey: restaurant.store.configs.settings.pixKey,
               address: restaurant.store.configs.settings.address,

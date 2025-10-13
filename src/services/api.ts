@@ -7,6 +7,7 @@ export interface AddressData {
   neighborhood: string;
   postalCode: string;
   complement?: string;
+  distance?: number; // Distância em metros (para enviar no payload ou recebida da API)
 }
 
 interface CustomerData {
@@ -57,6 +58,7 @@ interface CreateOrderPayload {
     items: OrderItem[];
     payment_method: 'pix' | 'credit_card';
     delivery: boolean;
+    // distance removido daqui - agora vai dentro de customer.address
   };
 }
 
@@ -160,16 +162,54 @@ export const apiService = {
         headers['Authorization'] = `${customerToken}`;
       }
 
+      console.log('📤 Enviando pedido para API:', {
+        url,
+        hasToken: !!customerToken,
+        payload: {
+          hasCustomer: !!payload.customer,
+          customerHasAddress: !!(payload.customer as any)?.address,
+          addressHasDistance: !!(payload.customer as any)?.address?.distance,
+          order: {
+            itemCount: payload.order.items.length,
+            delivery: payload.order.delivery,
+            payment_method: payload.order.payment_method,
+          }
+        }
+      });
+
       const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
       });
 
+      console.log('📥 Resposta da API:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Error response:', errorData);
-        throw new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+        // Tentar ler o corpo da resposta como texto primeiro
+        const responseText = await response.text();
+        console.error('❌ Resposta de erro (texto):', responseText);
+        
+        // Tentar parsear como JSON
+        let errorData: any = {};
+        try {
+          errorData = JSON.parse(responseText);
+          console.error('❌ Resposta de erro (JSON):', errorData);
+        } catch (parseError) {
+          console.error('❌ Não foi possível parsear erro como JSON');
+          console.error('❌ Conteúdo bruto:', responseText.substring(0, 500));
+        }
+        
+        throw new Error(
+          errorData.error?.message || 
+          errorData.message || 
+          `HTTP error! status: ${response.status} - ${responseText.substring(0, 100)}`
+        );
       }
 
       const data = await response.json();
