@@ -474,7 +474,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
                   <p className="text-xs text-destructive">
                     ⚠️ Nome incorreto. Digite exatamente: &quot;{deletingItem?.name}&quot;
                   </p>
-                )}
+                )} 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
