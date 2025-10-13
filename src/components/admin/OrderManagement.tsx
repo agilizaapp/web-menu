@@ -253,8 +253,8 @@ export const OrderManagement: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="text-center flex flex-col justify-center items-center">
+            <Loader2 className="mb-4 w-12 h-12 animate-spin text-muted-foreground" />
             <p className="text-muted-foreground">Carregando pedidos...</p>
           </div>
         </div>
