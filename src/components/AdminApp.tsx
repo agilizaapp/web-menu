@@ -102,7 +102,7 @@ export const AdminApp: React.FC = () => {
             </TabsList>
           )}
 
-          {/* ✅ ATUALIZADO: forceMount mantém componentes montados */}
+          {/* ✅ ATUALIZADO: Passar isVisible para MenuManagement */}
           <TabsContent value="orders" className="space-y-6" forceMount>
             <div className={activeTab === 'orders' ? 'block' : 'hidden'}>
               <OrderManagement />
@@ -113,7 +113,7 @@ export const AdminApp: React.FC = () => {
             <>
               <TabsContent value="menu" className="space-y-6" forceMount>
                 <div className={activeTab === 'menu' ? 'block' : 'hidden'}>
-                  <MenuManagement />
+                  <MenuManagement isVisible={activeTab === 'menu'} />
                 </div>
               </TabsContent>
 
@@ -132,7 +132,7 @@ export const AdminApp: React.FC = () => {
           ) : (
             <TabsContent value="menu" className="space-y-6" forceMount>
               <div className={activeTab === 'menu' ? 'block' : 'hidden'}>
-                <MenuManagement />
+                <MenuManagement isVisible={activeTab === 'menu'} />
               </div>
             </TabsContent>
           )}

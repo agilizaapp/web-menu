@@ -31,12 +31,12 @@ export class ProductService {
    * Atualizar produto existente
    */
   static async updateProduct(
-    productId: number,
+    id: number,
     payload: Partial<IUpdateProductPayload>
   ): Promise<IProductApiResponse> {
     try {
       const response = await apiClient.put<IProductApiResponse>(
-        `/product/${productId}`,
+        `/product/${id}`,
         payload
       );
       return response.data;
@@ -51,14 +51,31 @@ export class ProductService {
   /**
    * Deletar produto
    */
-  static async deleteProduct(productId: number): Promise<void> {
+  static async deleteProduct(id: number): Promise<void> {
     try {
-      await apiClient.delete(`/product/${productId}`);
+      await apiClient.delete(`/product/${id}`);
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
       }
       throw new ApiError('Erro ao deletar produto', 'DELETE_PRODUCT_ERROR');
+    }
+  }
+
+  /**
+   * Buscar produto por ID
+   */
+  static async getProductById(id: number): Promise<IProductApiResponse> {
+    try {
+      const response = await apiClient.get<IProductApiResponse>(
+        `/product/${id}`
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError('Erro ao buscar produto', 'GET_PRODUCT_ERROR');
     }
   }
 }
