@@ -36,7 +36,7 @@ export const DeliveryFeeInfo: React.FC<DeliveryFeeInfoProps> = ({ deliverySettin
         <div className="flex-1">
           <p className="font-medium text-sm text-blue-900 dark:text-blue-100 mb-2">
             Taxas de Entrega por Distância
-          </p>
+          </p> 
           <div className="space-y-1.5">
             {ranges.map((range, index) => (
               <div

@@ -94,7 +94,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
             hours: response?.store?.configs.settings.hours,
             useCustomHours: response?.store?.configs.settings.useCustomHours,
             customHours: response?.store?.configs.settings.customHours,
-            deliveryFee: response?.store?.configs.settings.deliveryFee,
+            deliverySettings: response?.store?.configs.settings.deliverySettings || [],
             deliveryZones: response?.store?.configs.settings.deliveryZones,
             pixKey: response?.store?.configs.settings.pixKey,
             address: response?.store?.configs.settings.address,
