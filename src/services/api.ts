@@ -162,20 +162,7 @@ export const apiService = {
         headers['Authorization'] = `${customerToken}`;
       }
 
-      console.log('📤 Enviando pedido para API:', {
-        url,
-        hasToken: !!customerToken,
-        payload: {
-          hasCustomer: !!payload.customer,
-          customerHasAddress: !!(payload.customer as { address?: unknown })?.address,
-          addressHasDistance: !!(payload.customer as { address?: { distance?: number } })?.address?.distance,
-          order: {
-            itemCount: payload.order.items.length,
-            delivery: payload.order.delivery,
-            payment_method: payload.order.payment_method,
-          }
-        }
-      });
+  // ...existing code...
 
       const response = await fetch(url, {
         method: 'POST',
@@ -183,12 +170,7 @@ export const apiService = {
         body: JSON.stringify(payload),
       });
 
-      console.log('📥 Resposta da API:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
+  // ...existing code...
 
       if (!response.ok) {
         // Tentar ler o corpo da resposta como texto primeiro

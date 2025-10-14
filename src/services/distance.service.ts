@@ -20,32 +20,35 @@ export interface DistanceResult {
 /**
  * Formata endereço para melhor resultado de geocoding
  */
-function formatAddressForGeocoding(address: string, city: string = "Campo Grande", state: string = "MS"): string {
-  // Normalizar formato: trocar " - " por ", "
-  let formatted = address.replace(/\s*-\s*/g, ', ');
-  
+function formatAddressForGeocoding(address: string, city: string = "Três Lagoas", state: string = "MS"): string {
+  // NOVO: Remove hífen do CEP (ex: 79603-070 -> 79603070) para melhorar o geocoding
+  let formatted = address.replace(/(\d{5})-(\d{3})/g, '$1$2');
+
+  // CORRIGIDO: Troca " - " por ", " (exige espaços para não quebrar CEPs)
+  formatted = formatted.replace(/\s-\s/g, ', ');
+
   // Remove vírgulas extras e espaços duplicados
   formatted = formatted.replace(/,+/g, ',').replace(/\s+/g, ' ').trim();
-  
+
   // Remove vírgula no final se existir
   formatted = formatted.replace(/,\s*$/, '');
-  
+
   // Adiciona cidade e estado se não estiver presente
   const lowerFormatted = formatted.toLowerCase();
-  
-  if (!lowerFormatted.includes('campo grande') && !lowerFormatted.includes(city.toLowerCase())) {
+
+  if (!lowerFormatted.includes('três lagoas') && !lowerFormatted.includes(city.toLowerCase())) {
     formatted += `, ${city}`;
   }
-  
+
   if (!lowerFormatted.includes(state.toLowerCase()) && !lowerFormatted.includes('ms')) {
     formatted += `, ${state}`;
   }
-  
+
   // Garante que tem Brasil no final se não tiver
   if (!lowerFormatted.includes('brasil') && !lowerFormatted.includes('brazil')) {
     formatted += ', Brasil';
   }
-  
+
   return formatted;
 }
 
@@ -69,11 +72,11 @@ async function geocodeAddress(address: string, city?: string, state?: string): P
       return null;
     }
 
-    console.log('🗺️ Geocodificando:', address);
+  // console.log('🗺️ Geocodificando:', address);
     
     // Formatar endereço para melhor resultado
     const formattedAddress = formatAddressForGeocoding(address, city, state);
-    console.log('📝 Endereço formatado:', formattedAddress);
+  // console.log('📝 Endereço formatado:', formattedAddress);
 
     // TENTATIVA 1: Busca completa com limit=5 para ter mais opções
     let response = await fetch(
@@ -96,19 +99,19 @@ async function geocodeAddress(address: string, city?: string, state?: string): P
     
     // Se encontrou resultados, usar o primeiro
     if (data && data.length > 0) {
-      console.log('✅ Coordenadas obtidas:', { 
-        lat: data[0].lat, 
-        lon: data[0].lon, 
-        display_name: data[0].display_name,
-        importance: data[0].importance 
-      });
+      // console.log('✅ Coordenadas obtidas:', { 
+      //   lat: data[0].lat, 
+      //   lon: data[0].lon, 
+      //   display_name: data[0].display_name,
+      //   importance: data[0].importance 
+      // });
       return data[0];
     }
 
     // TENTATIVA 2: Busca apenas com cidade e estado (mais genérica)
     console.warn('⚠️ Nenhum resultado na busca completa. Tentando busca genérica...');
     const genericAddress = `${city}, ${state}, Brasil`;
-    console.log('🔍 Tentativa 2 - Endereço genérico:', genericAddress);
+  // console.log('🔍 Tentativa 2 - Endereço genérico:', genericAddress);
     
     await new Promise(resolve => setTimeout(resolve, 1100)); // Rate limit
     
@@ -178,10 +181,10 @@ function calculateHaversineDistance(
 export async function calculateDistance(
   originAddress: string,
   destinationAddress: string,
-  city: string = "Campo Grande",
+  city: string = "Três Lagoas",
   state: string = "MS"
 ): Promise<DistanceResult> {
-  console.log('📍 Calculando distância entre:', { originAddress, destinationAddress });
+  // console.log('📍 Calculando distância entre:', { originAddress, destinationAddress });
 
   // Verificar se algum endereço está mascarado
   if (isAddressMasked(originAddress) || isAddressMasked(destinationAddress)) {
@@ -223,7 +226,7 @@ export async function calculateDistance(
   // Estimativa simples: 30 km/h de velocidade média
   const duration = Math.round((distanceInKm / 30) * 60);
 
-  console.log(`✅ Distância calculada: ${distanceInKm}km (${distanceInMeters}m) - Tempo estimado: ${duration}min`);
+  // console.log(`✅ Distância calculada: ${distanceInKm}km (${distanceInMeters}m) - Tempo estimado: ${duration}min`);
 
   return { distanceInKm, distanceInMeters, duration };
 }
@@ -249,14 +252,14 @@ export function calculateDeliveryFee(
 
     // Se a distância está dentro desta faixa
     if (distanceInMeters >= currentTier.distance && (!nextTier || distanceInMeters < nextTier.distance)) {
-      console.log(`💰 Taxa aplicada: R$ ${currentTier.value.toFixed(2)} (${distanceInMeters}m na faixa ${currentTier.distance}m)`);
+  // console.log(`💰 Taxa aplicada: R$ ${currentTier.value.toFixed(2)} (${distanceInMeters}m na faixa ${currentTier.distance}m)`);
       return currentTier.value;
     }
   }
 
   // Fallback: retorna a última taxa (maior distância)
   const lastTier = sortedSettings[sortedSettings.length - 1];
-  console.log(`💰 Taxa aplicada (fallback): R$ ${lastTier.value.toFixed(2)}`);
+  // console.log(`💰 Taxa aplicada (fallback): R$ ${lastTier.value.toFixed(2)}`);
   return lastTier.value;
 }
 

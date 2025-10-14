@@ -70,7 +70,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   // ✅ ATUALIZADO: Preencher formulário com dados das props
   useEffect(() => {
     if (isOpen && mode === 'edit' && productData) {
-      console.log('✏️ Carregando dados do produto para edição:', productData.name);
+  // console.log('✏️ Carregando dados do produto para edição:', productData.name);
 
       setFormData({
         id: productData.id,
@@ -83,7 +83,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         modifiers: (productData.modifiers as IProductModifierGroup[]) || [],
       });
     } else if (isOpen && mode === 'create') {
-      console.log('➕ Modo criação - formulário vazio');
+  // console.log('➕ Modo criação - formulário vazio');
       setFormData(INITIAL_FORM_DATA);
     }
   }, [isOpen, mode, productData]);

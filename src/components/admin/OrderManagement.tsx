@@ -129,7 +129,7 @@ export const OrderManagement: React.FC = () => {
   useEffect(() => {
     const newOrders = apiOrders.filter(order => order.status === 'pending');
     if (newOrders.length > 0 && soundEnabled) {
-      console.log('🔔 Novo pedido pendente!');
+  // console.log('🔔 Novo pedido pendente!');
     }
   }, [apiOrders, soundEnabled]);
 

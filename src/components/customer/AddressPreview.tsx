@@ -1,10 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+// Hook simples de debounce
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
 import { MapPin, Pen, Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchAddressByCEP, isValidCEP } from "@/services/viaCEP";
+import { calculateDistance } from "@/services/distance.service";
 import { toast } from "sonner";
 import type { AddressData } from "@/types";
 
@@ -14,6 +28,7 @@ interface AddressPreviewProps {
   errors?: Partial<Record<keyof AddressData, string>>;
   onValidate?: (field: keyof AddressData, value: string) => string;
   onEditingChange?: (isEditing: boolean) => void; // Novo callback
+  originAddress: string;
 }
 
 export const AddressPreview: React.FC<AddressPreviewProps> = ({
@@ -22,11 +37,23 @@ export const AddressPreview: React.FC<AddressPreviewProps> = ({
   errors = {},
   onValidate,
   onEditingChange,
+  originAddress,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedAddress, setEditedAddress] = useState<AddressData>(address);
   const [localErrors, setLocalErrors] = useState<Partial<Record<keyof AddressData, string>>>(errors);
   const [isLoadingCEP, setIsLoadingCEP] = useState(false);
+
+    // Debounce para o conjunto dos campos relevantes do endereço
+    const debouncedAddress = useDebounce(
+      {
+        street: editedAddress.street,
+        number: editedAddress.number,
+        neighborhood: editedAddress.neighborhood,
+        postalCode: editedAddress.postalCode,
+      },
+      500
+    );
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -98,6 +125,28 @@ export const AddressPreview: React.FC<AddressPreviewProps> = ({
       setLocalErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
+  // Chamar cálculo de distância apenas quando todos os campos estiverem estáveis
+  useEffect(() => {
+    if (!isEditing) return;
+    const { street, number, neighborhood, postalCode } = debouncedAddress;
+    const hasRequired = street && number && neighborhood && postalCode;
+    if (!hasRequired) return;
+
+    // Monta endereço destino do cliente
+    const destinationAddress = `${street}, ${number}, ${neighborhood}, ${postalCode}`;
+
+    // Evita cálculo se endereço estiver mascarado
+    if (destinationAddress.includes("*") || destinationAddress.includes("...")) return;
+
+    // Chama cálculo de distância usando originAddress da prop
+    calculateDistance(originAddress, destinationAddress)
+      .then(result => {
+        setEditedAddress(prev => ({ ...prev, distance: result.distanceInMeters }));
+      })
+      .catch(err => {
+        // toast.error("Erro ao calcular distância");
+      });
+  }, [debouncedAddress, isEditing, originAddress]);
 
   // Buscar endereço via CEP quando completo (8 dígitos)
   useEffect(() => {

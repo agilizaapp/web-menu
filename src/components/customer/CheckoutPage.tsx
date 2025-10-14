@@ -503,6 +503,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     errors={addressErrors}
                     onValidate={validateAddressField}
                     onEditingChange={setIsEditingAddress}
+                    originAddress={restaurantAddress}
                   />
                 ) : (
                   // Cliente novo - mostrar inputs normalmente
