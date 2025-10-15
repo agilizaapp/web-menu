@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import type { MenuItem, MenuModifierGroup } from '@/types/entities.types';
 import { Plus, Search, Edit, Trash2, Loader2, RefreshCcw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,9 +40,9 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [editingProduct, setEditingProduct] = useState<IProductPayload | null>(null);
+  const [editingProduct, setEditingProduct] = useState<MenuItem | null>(null);
 
-  const [deletingItem, setDeletingItem] = useState<IProductPayload | null>(null);
+  const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
@@ -63,6 +64,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
     });
   }, [menu, searchQuery, selectedCategory]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isVisible || currentRestaurant || (menu && menu.length > 0 && hasLoadedRef.current)) {
       return;
@@ -80,27 +82,41 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
       if (response?.products) {
         const products = Array.isArray(response.products) ? response.products : [];
 
+        // Map API products to our internal MenuItem shape to satisfy types
+        const menuItems = products.map((p) => ({
+          id: p.id || 0,
+          name: p.name || '',
+          description: p.description || '',
+          image: p.image || undefined,
+          category: p.category || '',
+          price: p.price || 0,
+          available: typeof p.available === 'boolean' ? p.available : true,
+          modifiers: (p.modifiers as MenuModifierGroup[]) || [],
+        })) as MenuItem[];
+
         const restaurantData = {
           id: 1,
           name: response?.store?.name || '',
           theme: {
-            name: response?.store?.name,
-            logo: response?.store?.configs.theme.logo,
-            primaryColor: response?.store?.configs.theme.primaryColor,
-            secondaryColor: response?.store?.configs.theme.secondaryColor,
-            accentColor: response?.store?.configs.theme.accentColor,
+            // ensure required strings have safe defaults
+            // API theme object may not include a 'name' field — use store name as fallback
+            name: response?.store?.name || '',
+            logo: response?.store?.configs?.theme?.logo || '',
+            primaryColor: response?.store?.configs?.theme?.primaryColor || '',
+            secondaryColor: response?.store?.configs?.theme?.secondaryColor || '',
+            accentColor: response?.store?.configs?.theme?.accentColor || '',
           },
           settings: {
-            hours: response?.store?.configs.settings.hours,
-            useCustomHours: response?.store?.configs.settings.useCustomHours,
-            customHours: response?.store?.configs.settings.customHours,
-            deliverySettings: response?.store?.configs.settings.deliverySettings || [],
-            deliveryZones: response?.store?.configs.settings.deliveryZones,
-            pixKey: response?.store?.configs.settings.pixKey,
-            address: response?.store?.configs.settings.address,
-            pickUpLocation: response?.store?.configs.settings.pickUpLocation,
+            hours: response?.store?.configs?.settings?.hours || '',
+            useCustomHours: response?.store?.configs?.settings?.useCustomHours,
+            customHours: response?.store?.configs?.settings?.customHours,
+            deliverySettings: response?.store?.configs?.settings?.deliverySettings || [],
+            deliveryZones: response?.store?.configs?.settings?.deliveryZones || [],
+            pixKey: response?.store?.configs?.settings?.pixKey || '',
+            address: response?.store?.configs?.settings?.address,
+            pickUpLocation: response?.store?.configs?.settings?.pickUpLocation,
           },
-          menu: products as IProductPayload[],
+          menu: menuItems,
         };
 
         setCurrentRestaurant(restaurantData);
@@ -123,13 +139,13 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
     setModalOpen(true);
   };
 
-  const handleEdit = (item: IProductPayload) => {
+  const handleEdit = (item: MenuItem) => {
     setModalMode('edit');
     setEditingProduct(item);
     setModalOpen(true);
   };
 
-  const handleProductSave = async (product: IProductPayload) => {
+  const handleProductSave = async (product: MenuItem) => {
     try {
       if (modalMode === 'edit' && currentRestaurant) {
         const updatedMenu = currentRestaurant.menu.map((item) =>
@@ -152,7 +168,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
     }
   };
 
-  const toggleAvailability = async (item: IProductPayload) => {
+  const toggleAvailability = async (item: MenuItem) => {
     try {
       setLoadingProductId(item.id || 0);
 
@@ -160,8 +176,8 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
         const newAvailability = !item.available;
 
         // Faz a requisição para atualizar a disponibilidade do produto
-        const response = await ProductService.updateProduct(item.id || 0, {
-          ...item,
+        const response: IProductPayload = await ProductService.updateProduct(item.id || 0, {
+          // send only payload expected by API
           available: newAvailability,
         });
 
@@ -169,7 +185,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
         if (currentRestaurant) {
           const updatedMenu = currentRestaurant.menu.map((menuItem) =>
             menuItem.id === item.id
-              ? { ...menuItem, available: response.product.available }
+              ? { ...menuItem, available: response?.available ?? newAvailability }
               : menuItem
           );
 
@@ -180,9 +196,8 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
         }
 
         // Exibe uma mensagem de sucesso ao usuário
-        toast.success(
-          `${item.name} ${response.product.available ? 'habilitado' : 'desabilitado'}`
-        );
+        const availableFlag = response?.available ?? newAvailability;
+        toast.success(`${item.name} ${availableFlag ? 'habilitado' : 'desabilitado'}`);
       } catch (error) {
         console.error('❌ Erro ao atualizar disponibilidade:', error);
 
@@ -201,6 +216,31 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
 
     }
   }
+
+  // Deletar: abrir modal de confirmação
+  const handleDeleteClick = (item: MenuItem) => {
+    setDeletingItem(item);
+    setDeleteConfirmText('');
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingItem) return;
+    setIsDeleting(true);
+    try {
+  await ProductService.deleteProduct(deletingItem.id!);
+      if (currentRestaurant) {
+        const updatedMenu = currentRestaurant.menu.filter(m => m.id !== deletingItem.id);
+        setCurrentRestaurant({ ...currentRestaurant, menu: updatedMenu });
+      }
+      toast.success('Produto deletado com sucesso');
+      setDeletingItem(null);
+      setDeleteConfirmText('');
+    } catch (error) {
+      toast.error('Erro ao deletar produto');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoadingMenu) {
     return (
@@ -414,7 +454,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
       <ProductModal
         isOpen={modalOpen}
         mode={modalMode}
-        productData={editingProduct}
+        productData={editingProduct || undefined}
         categories={categories as string[]}
         onClose={() => setModalOpen(false)}
         onSave={handleProductSave}
@@ -467,7 +507,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
-              // onClick={handleDeleteConfirm}
+              onClick={handleDeleteConfirm}
               disabled={
                 isDeleting ||
                 deleteConfirmText.trim().toLowerCase() !==

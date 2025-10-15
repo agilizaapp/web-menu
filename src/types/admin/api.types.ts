@@ -1,5 +1,10 @@
 import { MenuItem } from '../entities.types';
-import { IProductModifierGroup } from './product.types';
+
+// Referência simples para modificadores selecionados em um pedido
+export interface IOrderModifierRef {
+  modifier_id: string;
+  option_id: string;
+}
 
 // ApiResponse já está exportado em restaurant/api.types
 // export interface ApiResponse<T> {
@@ -43,7 +48,8 @@ export interface IOrderItem {
   price: number;
   product_id: number;
   quantity: number;
-  modifiers?: IProductModifierGroup[];
+  // Modificadores em um pedido vêm como referências às opções selecionadas
+  modifiers?: IOrderModifierRef[];
 }
 
 export interface IOrderAddress {

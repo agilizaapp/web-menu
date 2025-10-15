@@ -138,22 +138,26 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       if (mode === 'edit' && formData.id) {
         const response = await ProductService.updateProduct(formData.id, payload);
 
+        // response is typed as IProductPayload
+        const res = response as IProductPayload;
+
         const updatedProduct: MenuItem = {
-          id: response.product.id,
-          name: response.product.name,
-          description: response.product.description,
-          category: response.product.category,
-          price: response.product.price / 100, // ✅ Converter centavos para reais
-          image: response.product.image,
-          available: response.product.available,
+          id: typeof res.id === 'number' ? res.id : formData.id,
+          name: res.name,
+          description: res.description,
+          category: res.category,
+          // Defender contra formato: se o backend retornar preço em centavos (>1000), convertemos
+          price: typeof res.price === 'number' && res.price > 1000 ? res.price / 100 : res.price,
+          image: res.image || formData.image,
+          available: typeof res.available === 'boolean' ? res.available : formData.available,
           modifiers: formData.modifiers, // Mantém modificadores do form
-        };
+        } as MenuItem;
 
         onSave(updatedProduct);
         toast.success('✅ Produto atualizado com sucesso');
       } else {
         // ✅ CRIAR novo produto
-        console.log('📤 Criando novo produto');
+  // Criando novo produto
         const response = await ProductService.createProduct(payload);
 
         const newProduct: MenuItem = {

@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrderStore, useRestaurantStore } from '@/stores';
 import { IOrderApi, IOrderAddress, OrderStatus } from '@/types/admin/api.types';
-import { MenuItem } from '@/types/entities.types';
+import type { MenuItem } from '@/types/entities.types';
 import { toast } from 'sonner';
 import { AdminService } from '@/services/admin/admin.service';
 import { ApiError } from '@/lib/utils/api-error';
@@ -39,9 +39,12 @@ const findMenuItem = (productId: number, menu: MenuItem[]): MenuItem | null => {
   return menu.find(item => item.id === productId) || null;
 };
 
+// Local type describing modifiers in order items (references to menu modifier/options)
+type OrderModifierRef = { modifier_id: string; option_id: string };
+
 // ✅ ATUALIZADO: Helper para formatar modificadores
 const formatModifiers = (
-  modifiers: IOrderApi['detail']['items'][0]['modifiers'],
+  modifiers: OrderModifierRef[] | undefined,
   menuItem: MenuItem | null
 ): string => {
   if (!modifiers || modifiers.length === 0) return '';
@@ -51,10 +54,10 @@ const formatModifiers = (
 
   const modifierNames: string[] = [];
 
-  modifiers.forEach(mod => {
-    const modifierGroup = menuItem.modifiers?.find(g => g.id === mod.modifier_id);
+  modifiers.forEach((mod) => {
+    const modifierGroup = menuItem.modifiers?.find((g) => g.id === mod.modifier_id);
     if (modifierGroup) {
-      const option = modifierGroup.options.find(o => o.id === mod.option_id);
+      const option = modifierGroup.options.find((o) => o.id === mod.option_id);
       if (option) {
         modifierNames.push(option.name);
       }
@@ -68,7 +71,7 @@ const formatModifiers = (
 const calculateItemTotal = (
   price: number,
   quantity: number,
-  modifiers: IOrderApi['detail']['items'][0]['modifiers'],
+  modifiers: OrderModifierRef[] | undefined,
   menuItem: MenuItem | null
 ): number => {
   // O preço base já vem da API
@@ -76,10 +79,10 @@ const calculateItemTotal = (
 
   // Adicionar preço dos modificadores (se disponível no menu)
   if (modifiers && menuItem?.modifiers) {
-    modifiers.forEach(mod => {
-      const modifierGroup = menuItem.modifiers?.find(g => g.id === mod.modifier_id);
+    modifiers.forEach((mod) => {
+      const modifierGroup = menuItem.modifiers?.find((g) => g.id === mod.modifier_id);
       if (modifierGroup) {
-        const option = modifierGroup.options.find(o => o.id === mod.option_id);
+        const option = modifierGroup.options.find((o) => o.id === mod.option_id);
         if (option) {
           itemPrice += option.price;
         }
