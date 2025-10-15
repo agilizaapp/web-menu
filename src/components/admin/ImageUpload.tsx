@@ -107,8 +107,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           <div className="relative w-full rounded-lg overflow-hidden bg-muted border-2 border-muted max-h-[400px]">
             <img
               src={previewUrl}
-              alt="Preview"
-              className="w-full h-full object-contain"
+              alt="Imagem de preview do produto"
+              className="w-full h-full object-contain max-h-[355px]"
             />
 
             {/* Loading Overlay */}

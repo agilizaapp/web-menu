@@ -1,12 +1,11 @@
 export * from './restaurant/api.types';
 // Export específicos de admin para evitar conflitos
-export type { 
+export type {
   PaginatedResponse,
   IGetAllOrdersApiResponse,
   IOrderApi,
   IOrderDetail,
   IOrderItem,
-  IOrderItemModifier,
   IOrderCustomer,
   IOrderAddress,
   OrderStatus,

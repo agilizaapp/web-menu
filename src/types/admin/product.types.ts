@@ -1,5 +1,3 @@
-import { IOrderItemModifier } from './api.types';
-
 export interface IProductModifierOption {
   id: string;
   name: string;
@@ -17,20 +15,6 @@ export interface IProductModifierGroup {
   options: IProductModifierOption[];
 }
 
-export interface ICreateProductPayload {
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  image?: string;
-  available: boolean;
-  modifiers?: IProductModifierGroup[];
-}
-
-export interface IUpdateProductPayload extends Partial<ICreateProductPayload> {
-  id: number;
-}
-
 export interface IProductApiResponse {
   success: boolean;
   data: {
@@ -46,4 +30,15 @@ export interface IProductApiResponse {
     updated_at: string;
   };
   message?: string;
+}
+
+export interface IProductPayload {
+  id?: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  available: boolean;
+  image?: string;
+  modifiers?: IProductModifierGroup[];
 }

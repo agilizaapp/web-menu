@@ -1,9 +1,8 @@
 import { apiClient } from '@/lib/api/client';
 import { ApiError } from '@/lib/utils/api-error';
 import type {
-  ICreateProductPayload,
-  IUpdateProductPayload,
-  IProductApiResponse,
+  IProductPayload,
+  IProductApiResponse
 } from '@/types/admin/product.types';
 
 export class ProductService {
@@ -11,7 +10,7 @@ export class ProductService {
    * Criar novo produto
    */
   static async createProduct(
-    payload: ICreateProductPayload
+    payload: IProductPayload
   ): Promise<IProductApiResponse> {
     try {
       const response = await apiClient.post<IProductApiResponse>(
@@ -29,13 +28,14 @@ export class ProductService {
 
   /**
    * Atualizar produto existente
+   * @returns Resposta específica com estrutura { product: {...} }
    */
   static async updateProduct(
     id: number,
-    payload: Partial<IUpdateProductPayload>
-  ): Promise<IProductApiResponse> {
+    payload: Partial<IProductPayload>
+  ): Promise<IProductPayload> {
     try {
-      const response = await apiClient.put<IProductApiResponse>(
+      const response = await apiClient.put<IProductPayload>(
         `/product/${id}`,
         payload
       );
