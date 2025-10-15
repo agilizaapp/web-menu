@@ -19,7 +19,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useRestaurantStore } from '@/stores';
 import { toast } from 'sonner';
-import type { MenuItem, Restaurant } from '@/types/entities.types';
+import type { IProductPayload } from '@/types/admin/product.types';
 import { ProductService } from '@/services/admin/product.service';
 import { RestaurantsService } from '@/services/restaurant/restaurant.service';
 import { ApiError } from '@/lib/utils/api-error';
@@ -37,13 +37,14 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
   const [isLoadingMenu, setIsLoadingMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ✅ ATUALIZADO: Estados para o modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [editingProduct, setEditingProduct] = useState<MenuItem | undefined>(); // ✅ MUDOU: Armazena objeto completo
+  const [editingProduct, setEditingProduct] = useState<IProductPayload | null>(null);
 
-  const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<IProductPayload | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
 
   const hasLoadedRef = useRef(false);
 
@@ -52,7 +53,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
   }, [categories]);
 
   const filteredMenu = useMemo(() => {
-    const filtered = menu.filter((item) => {
+    return menu.filter((item) => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -60,13 +61,12 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
         selectedCategory === 'all' || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-    return filtered;
   }, [menu, searchQuery, selectedCategory]);
 
   useEffect(() => {
-    if (!isVisible) return;
-    if (currentRestaurant) return;
-    if (menu && menu.length > 0 && hasLoadedRef.current) return;
+    if (!isVisible || currentRestaurant || (menu && menu.length > 0 && hasLoadedRef.current)) {
+      return;
+    }
 
     hasLoadedRef.current = true;
     loadMenuFromAPI();
@@ -100,10 +100,10 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
             address: response?.store?.configs.settings.address,
             pickUpLocation: response?.store?.configs.settings.pickUpLocation,
           },
-          menu: products as MenuItem[],
+          menu: products as IProductPayload[],
         };
 
-        setCurrentRestaurant(restaurantData as Restaurant);
+        setCurrentRestaurant(restaurantData);
 
         if (showToast) {
           toast.success(`${products.length} produtos carregados`);
@@ -111,122 +111,96 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
       }
     } catch (error) {
       console.error('❌ Erro ao carregar menu:', error);
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao carregar produtos');
-      }
+      toast.error(error instanceof ApiError ? error.message : 'Erro ao carregar produtos');
     } finally {
       setIsLoadingMenu(false);
     }
   };
 
-  // ✅ NOVO: Abrir modal para criar produto
   const handleAddNew = () => {
     setModalMode('create');
-    setEditingProduct(undefined);
+    setEditingProduct(null);
     setModalOpen(true);
   };
 
-  // Abrir modal para editar produto (passa objeto completo)
-  const handleEdit = (item: MenuItem) => {
+  const handleEdit = (item: IProductPayload) => {
     setModalMode('edit');
     setEditingProduct(item);
     setModalOpen(true);
   };
 
-  const handleProductSave = (product: MenuItem) => {
-    if (modalMode === 'edit' && currentRestaurant) {
-      // Atualizar produto existente
-      const updatedMenu = currentRestaurant.menu.map((item) =>
-        item.id === product.id ? product : item
-      );
-      setCurrentRestaurant({
-        ...currentRestaurant,
-        menu: updatedMenu,
-      });
-    } else {
-      if (currentRestaurant)
+  const handleProductSave = async (product: IProductPayload) => {
+    try {
+      if (modalMode === 'edit' && currentRestaurant) {
+        const updatedMenu = currentRestaurant.menu.map((item) =>
+          item.id === product.id ? product : item
+        );
+        setCurrentRestaurant({
+          ...currentRestaurant,
+          menu: updatedMenu,
+        });
+      } else if (currentRestaurant) {
         setCurrentRestaurant({
           ...currentRestaurant,
           menu: [...currentRestaurant.menu, product],
         });
-    }
-  };
-
-  const handleDeleteClick = (item: MenuItem) => {
-    setDeletingItem(item);
-    setDeleteConfirmText('');
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingItem) return;
-
-    if (
-      deleteConfirmText.trim().toLowerCase() !== deletingItem.name.trim().toLowerCase()
-    ) {
-      toast.error('Nome do produto incorreto. Tente novamente.');
-      return;
-    }
-
-    try {
-      setIsDeleting(true);
-      await ProductService.deleteProduct(deletingItem.id);
-
-      if (currentRestaurant) {
-        const updatedMenu = currentRestaurant.menu.filter(
-          (menuItem) => menuItem.id !== deletingItem.id
-        );
-        setCurrentRestaurant({
-          ...currentRestaurant,
-          menu: updatedMenu,
-        });
       }
-
-      toast.success('✅ Produto deletado com sucesso');
-      setDeletingItem(null);
-      setDeleteConfirmText('');
+      toast.success('Produto salvo com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao deletar:', error);
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao deletar produto');
-      }
-    } finally {
-      setIsDeleting(false);
+      console.error('❌ Erro ao salvar produto:', error);
+      toast.error('Erro ao salvar produto');
     }
   };
 
-  const toggleAvailability = async (item: MenuItem, e: React.MouseEvent) => {
-    e.stopPropagation();
-
+  const toggleAvailability = async (item: IProductPayload) => {
     try {
-      const newAvailability = !item.available;
-      await ProductService.updateProduct(item.id, {
-        available: newAvailability,
-      });
+      setLoadingProductId(item.id || 0);
 
-      if (currentRestaurant) {
-        const updatedMenu = currentRestaurant.menu.map((menuItem) =>
-          menuItem.id === item.id ? { ...menuItem, available: newAvailability } : menuItem
-        );
-        setCurrentRestaurant({
-          ...currentRestaurant,
-          menu: updatedMenu,
+      try {
+        const newAvailability = !item.available;
+
+        // Faz a requisição para atualizar a disponibilidade do produto
+        const response = await ProductService.updateProduct(item.id || 0, {
+          ...item,
+          available: newAvailability,
         });
-      }
 
-      toast.success(`${item.name} ${newAvailability ? 'habilitado' : 'desabilitado'}`);
-    } catch (error) {
-      console.error('❌ Erro ao toggle:', error);
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao atualizar disponibilidade');
+        // Atualiza o estado do restaurante apenas se o produto for atualizado com sucesso
+        if (currentRestaurant) {
+          const updatedMenu = currentRestaurant.menu.map((menuItem) =>
+            menuItem.id === item.id
+              ? { ...menuItem, available: response.product.available }
+              : menuItem
+          );
+
+          setCurrentRestaurant({
+            ...currentRestaurant,
+            menu: updatedMenu,
+          });
+        }
+
+        // Exibe uma mensagem de sucesso ao usuário
+        toast.success(
+          `${item.name} ${response.product.available ? 'habilitado' : 'desabilitado'}`
+        );
+      } catch (error) {
+        console.error('❌ Erro ao atualizar disponibilidade:', error);
+
+        // Exibe uma mensagem de erro ao usuário
+        toast.error(
+          error instanceof ApiError
+            ? error.message
+            : 'Erro ao atualizar disponibilidade do produto'
+        );
+      } finally {
+        // Reseta o estado de loading para permitir novas interações
+        setLoadingProductId(null);
       }
+    } catch (e) {
+      console.error('❌ Erro inesperado ao alternar disponibilidade:', e);
+
     }
-  };
+  }
 
   if (isLoadingMenu) {
     return (
@@ -316,13 +290,14 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
         {filteredMenu.map((item) => (
           <Card
             key={item.id}
-            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+            className={`overflow-hidden hover:shadow-lg transition-shadow cursor-pointer ${loadingProductId === item.id ? 'opacity-50 pointer-events-none' : ''
+              }`} // Adiciona opacidade e desabilita interações durante o loading
             onClick={() => handleEdit(item)}
           >
             <div className="flex gap-4 p-4">
               <div className="relative w-32 h-32 shrink-0 rounded-lg overflow-hidden bg-muted">
                 <img
-                  src={item.image || '/placeholder-food.jpg'}
+                  src={item.image || '/product-image-default.webp'}
                   alt={item.name}
                   className="w-full h-full object-cover"
                 />
@@ -353,6 +328,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
                         handleEdit(item);
                       }}
                       className="h-9 w-9"
+                      disabled={loadingProductId === item.id} // Desabilita o botão durante o loading
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -364,6 +340,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
                         handleDeleteClick(item);
                       }}
                       className="h-9 w-9 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      disabled={loadingProductId === item.id} // Desabilita o botão durante o loading
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -393,13 +370,16 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
                     <span className="text-xs text-muted-foreground">
                       {item.available ? 'Disponível' : 'Indisponível'}
                     </span>
-                    <Switch
-                      checked={item.available}
-                      onCheckedChange={() =>
-                        toggleAvailability(item, {} as React.MouseEvent)
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        checked={item.available}
+                        onCheckedChange={() => toggleAvailability(item)}
+                        disabled={loadingProductId === item.id} // Desabilita o switch durante o loading
+                      />
+                      {loadingProductId === item.id && (
+                        <Loader2 className="w-4 h-4 ml-2 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -431,11 +411,10 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
         </div>
       )}
 
-      {/* ✅ ATUALIZADO: Modal recebe productData em vez de productId */}
       <ProductModal
         isOpen={modalOpen}
         mode={modalMode}
-        productData={editingProduct} // ✅ Passa objeto completo
+        productData={editingProduct}
         categories={categories as string[]}
         onClose={() => setModalOpen(false)}
         onSave={handleProductSave}
@@ -488,7 +467,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
+              // onClick={handleDeleteConfirm}
               disabled={
                 isDeleting ||
                 deleteConfirmText.trim().toLowerCase() !==
@@ -510,4 +489,4 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({ isVisible = true
       </AlertDialog>
     </div>
   );
-};
+}

@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import type { MenuItem } from '@/types/entities.types';
 import type {
-  ICreateProductPayload,
+  IProductPayload,
   IProductModifierGroup,
 } from '@/types/admin/product.types';
 import { ProductService } from '@/services/admin/product.service';
@@ -118,14 +118,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     return true;
   };
 
-  // ✅ Salvar produto (criar ou editar)
+  // Salvar produto (criar ou editar)
   const handleSave = async () => {
     if (!validateForm()) return;
 
     try {
       setIsSaving(true);
 
-      const payload: ICreateProductPayload = {
+      const payload: IProductPayload = {
         name: formData.name,
         description: formData.description,
         category: formData.category,
@@ -139,19 +139,21 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         const response = await ProductService.updateProduct(formData.id, payload);
 
         const updatedProduct: MenuItem = {
-          id: response.data.id,
-          name: response.data.name,
-          description: response.data.description,
-          category: response.data.category,
-          price: response.data.price,
-          image: response.data.image,
-          available: response.data.available,
-          modifiers: response.data.modifiers,
+          id: response.product.id,
+          name: response.product.name,
+          description: response.product.description,
+          category: response.product.category,
+          price: response.product.price / 100, // ✅ Converter centavos para reais
+          image: response.product.image,
+          available: response.product.available,
+          modifiers: formData.modifiers, // Mantém modificadores do form
         };
 
         onSave(updatedProduct);
         toast.success('✅ Produto atualizado com sucesso');
       } else {
+        // ✅ CRIAR novo produto
+        console.log('📤 Criando novo produto');
         const response = await ProductService.createProduct(payload);
 
         const newProduct: MenuItem = {
@@ -184,7 +186,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     }
   };
 
-  // ✅ Fechar modal e resetar formulário
+  // Fechar modal e resetar formulário
   const handleClose = () => {
     setFormData(INITIAL_FORM_DATA);
     onClose();

@@ -1,4 +1,5 @@
-import { MenuCategory, MenuItem } from '../entities.types';
+import { MenuItem } from '../entities.types';
+import { IProductModifierGroup } from './product.types';
 
 // ApiResponse já está exportado em restaurant/api.types
 // export interface ApiResponse<T> {
@@ -35,11 +36,6 @@ export interface PaginatedResponse<T> {
 
 // ==================== API ORDER TYPES ====================
 
-export interface IOrderItemModifier {
-  modifier_id: string;
-  option_id: string;
-}
-
 export interface IOrderItem {
   name: string;
   description: string;
@@ -47,7 +43,7 @@ export interface IOrderItem {
   price: number;
   product_id: number;
   quantity: number;
-  modifiers?: IOrderItemModifier[];
+  modifiers?: IProductModifierGroup[];
 }
 
 export interface IOrderAddress {
