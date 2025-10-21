@@ -28,30 +28,31 @@ export default function AdminPartnerPage() {
       return;
     }
 
-    // if (urlId !== validClientId) {
-    //   toast.error("Acesso negado: Credenciais inválidas");
-    //   setIsValidating(false);
+    if (urlId !== validClientId) {
+      toast.error("Acesso negado: Credenciais inválidas");
+      setIsValidating(false);
 
-    //   setTimeout(() => {
-    //     router.push("/");
-    //   }, 2000);
-    //   return;
-    // }
+      // setTimeout(() => {
+      //   router.push("/");
+      // }, 2000);
+      // return;
+    }
 
     setIsAuthorized(true);
     setIsValidating(false);
   }, [urlId, validClientId, router]);
 
-  // if (isValidating) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-background">
-  //       <div className="text-center space-y-4">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-  //         <p className="text-muted-foreground">Validando credenciais...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (isValidating) {
+    console.log("Validando credenciais...");
+    // return (
+    //   <div className="min-h-screen flex items-center justify-center bg-background">
+    //     <div className="text-center space-y-4">
+    //       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+    //       <p className="text-muted-foreground">Validando credenciais...</p>
+    //     </div>
+    //   </div>
+    // );
+  }
 
   // if (!isAuthorized) {
   //   return (
