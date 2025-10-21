@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminApp } from "@/components/AdminApp";
+import { Suspense } from "react";
 import { toast } from "sonner";
 
 export default function AdminPartnerPage() {
@@ -71,5 +72,9 @@ export default function AdminPartnerPage() {
   //   );
   // }
 
-  return <AdminApp />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Carregando...</div>}>
+      <AdminApp />
+    </Suspense>
+  );
 }
