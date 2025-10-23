@@ -8,6 +8,7 @@ import { RestaurantsService } from '@/services/restaurant/restaurant.service';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/utils/api-error';
 import type { MenuItem } from '@/types/entities.types';
+import type { AddressData } from '@/types';
 import { CustomerApp } from '@/components/CustomerApp';
 
 /* mock */
@@ -95,12 +96,15 @@ export default function Page() {
 
               // Se tivermos distância do cliente e regras de entrega, calcular e mostrar a taxa
               try {
-                const customerAddr = restaurant.customer.address as any;
+                // Tratar address usando o tipo conhecido quando possível
+                const customerAddr = restaurant.customer.address as unknown as Partial<AddressData> | undefined;
                 const deliverySettings = restaurant.store?.configs?.settings?.deliverySettings ?? [];
 
                 // O campo de distância pode não existir no tipo, fazer parsing seguro
-                const rawDist = customerAddr?.distance ?? customerAddr?.dist ?? null;
-                const custDist = rawDist != null ? Number(rawDist) : NaN;
+                const rawDist = customerAddr
+                  ? ((customerAddr as Partial<AddressData>).distance ?? (customerAddr as Record<string, unknown>)['dist'])
+                  : null;
+                const custDist = rawDist != null ? Number(String(rawDist)) : NaN;
 
                 if (!isNaN(custDist) && Array.isArray(deliverySettings) && deliverySettings.length > 0) {
                   // Ordenar por distance desc para achar o primeiro threshold que o cliente alcance
@@ -114,7 +118,20 @@ export default function Page() {
                   }
 
                   // Se houver pickUpLocation no settings, mostrar também informações de retirada
-                  const pickup = restaurant.store?.configs?.settings?.pickUpLocation as any;
+                  type PickupLocation = {
+                    street?: string;
+                    address?: string;
+                    number?: string | number;
+                    neigborhood?: string;
+                    neighborhood?: string;
+                    postalCode?: string;
+                    postalcode?: string;
+                    zip?: string;
+                    mapsUrl?: string;
+                    mapUrl?: string;
+                  };
+
+                  const pickup = restaurant.store?.configs?.settings?.pickUpLocation as Partial<PickupLocation> | undefined;
                   if (pickup) {
                     const street = pickup.street ?? pickup.address ?? '';
                     const number = pickup.number ? String(pickup.number) : '';
