@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { ApiError } from '@/lib/utils/api-error';
 import type { MenuItem } from '@/types/entities.types';
 import type { AddressData } from '@/types';
+import type { DeliverySettings } from '@/types/entities.types';
 import { CustomerApp } from '@/components/CustomerApp';
 
 /* mock */
@@ -107,14 +108,29 @@ export default function Page() {
                 const custDist = rawDist != null ? Number(String(rawDist)) : NaN;
 
                 if (!isNaN(custDist) && Array.isArray(deliverySettings) && deliverySettings.length > 0) {
-                  // Ordenar por distance desc para achar o primeiro threshold que o cliente alcance
-                  const sorted = [...deliverySettings].sort((a, b) => Number(b.distance) - Number(a.distance));
-                  const matched = sorted.find(s => custDist >= Number(s.distance)) ?? sorted[sorted.length - 1];
-                  const fee = matched?.value;
-                  if (fee != null) {
+                  // Debug: inspecionar valores para entender discrepâncias
+                  // (remova/ajuste em produção se preferir)
+                  console.debug('deliverySettings', deliverySettings);
+                  console.debug('custDist', custDist);
+
+                  // Ordenar por distance asc e escolher o maior threshold <= custDist
+                  const sortedAsc = ([...deliverySettings] as DeliverySettings[]).sort((a, b) => a.distance - b.distance);
+                  let matched: DeliverySettings = sortedAsc[0];
+                  for (const s of sortedAsc) {
+                    const sDist = Number(s.distance ?? 0);
+                    if (!isNaN(sDist) && custDist >= sDist) matched = s;
+                  }
+
+                  const feeRaw = matched?.value;
+                  const fee = feeRaw != null ? Number(feeRaw) : undefined;
+                  console.debug('matched threshold', matched, 'fee', fee);
+
+                  if (fee != null && !isNaN(fee)) {
                     // Formatar como moeda simples (BRL)
-                    const feeLabel = typeof Intl !== 'undefined' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(fee)) : `R$${fee}`;
+                    const feeLabel = typeof Intl !== 'undefined' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(fee) : `R$${fee}`;
                     toast(`Taxa de entrega: ${feeLabel} — distância: ${custDist}m`, { icon: '🛵' });
+                  } else {
+                    console.debug('Delivery fee not available or invalid for matched threshold', matched);
                   }
 
                   // Se houver pickUpLocation no settings, mostrar também informações de retirada
