@@ -215,7 +215,7 @@ export default function Page() {
         
         {/* Versão no rodapé */}
         <div className="pb-8">
-          <p className="text-xs text-muted-foreground/50">v0.1.1</p>
+          <p className="text-xs text-muted-foreground/50">v0.1.2</p>
         </div>
       </div>
     );
