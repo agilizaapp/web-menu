@@ -82,14 +82,58 @@ export default function Page() {
               // NÃO atualizar o telefone - API retorna mascarado (67)*****1768
               // O telefone completo já está salvo no localStorage
               const currentPhone = useCustomerStore.getState().phone;
-              
+
               setCustomer({
                 token,
                 name: restaurant.customer.name,
                 phone: currentPhone || restaurant.customer.phone, // Usa o que já estava salvo
                 address: restaurant.customer.address || undefined,
               });
+
+              // Mensagem de boas-vindas
               toast.success(`Bem-vindo de volta, ${restaurant.customer.name}!`);
+
+              // Se tivermos distância do cliente e regras de entrega, calcular e mostrar a taxa
+              try {
+                const customerAddr = restaurant.customer.address as any;
+                const deliverySettings = restaurant.store?.configs?.settings?.deliverySettings ?? [];
+
+                // O campo de distância pode não existir no tipo, fazer parsing seguro
+                const rawDist = customerAddr?.distance ?? customerAddr?.dist ?? null;
+                const custDist = rawDist != null ? Number(rawDist) : NaN;
+
+                if (!isNaN(custDist) && Array.isArray(deliverySettings) && deliverySettings.length > 0) {
+                  // Ordenar por distance desc para achar o primeiro threshold que o cliente alcance
+                  const sorted = [...deliverySettings].sort((a, b) => Number(b.distance) - Number(a.distance));
+                  const matched = sorted.find(s => custDist >= Number(s.distance)) ?? sorted[sorted.length - 1];
+                  const fee = matched?.value;
+                  if (fee != null) {
+                    // Formatar como moeda simples (BRL)
+                    const feeLabel = typeof Intl !== 'undefined' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(fee)) : `R$${fee}`;
+                    toast(`Taxa de entrega: ${feeLabel} — distância: ${custDist}m`, { icon: '🛵' });
+                  }
+
+                  // Se houver pickUpLocation no settings, mostrar também informações de retirada
+                  const pickup = restaurant.store?.configs?.settings?.pickUpLocation as any;
+                  if (pickup) {
+                    const street = pickup.street ?? pickup.address ?? '';
+                    const number = pickup.number ? String(pickup.number) : '';
+                    const neighborhood = pickup.neigborhood ?? pickup.neighborhood ?? '';
+                    const postal = pickup.postalCode ?? pickup.postalcode ?? pickup.zip ?? '';
+                    const parts: string[] = [];
+                    if (street) parts.push(number ? `${street}, ${number}` : street);
+                    if (neighborhood) parts.push(neighborhood);
+                    const pickupLabel = parts.join(' - ');
+                    const mapUrl = pickup.mapsUrl ?? pickup.mapUrl ?? '';
+
+                    const pickupMsg = `${pickupLabel}${postal ? ` • CEP ${postal}` : ''}${mapUrl ? ` — mapa: ${mapUrl}` : ''}`;
+                    toast.info(`Local de retirada: ${pickupMsg}`, { icon: '📍' });
+                  }
+                }
+              } catch (err) {
+                // Não bloquear fluxo principal se cálculo falhar
+                console.warn('Erro ao calcular taxa de entrega:', err);
+              }
             }
           }
 
