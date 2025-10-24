@@ -80,6 +80,11 @@ export interface MenuItem {
   tags?: string[];
   calories?: number;
   allergens?: string[];
+  // Campos para destacar itens populares
+  isHighlighted?: boolean; // Se o item está em destaque
+  highlightType?: 'popular' | 'chef-recommendation' | 'promotion' | 'new'; // Tipo de destaque
+  highlightLabel?: string; // Label personalizado (ex: "Mais Pedido", "Recomendação do Chefe")
+  orderCount?: number; // Número de pedidos (para ranking)
 }
 
 export interface MenuModifierGroup {

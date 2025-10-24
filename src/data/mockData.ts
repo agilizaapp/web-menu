@@ -250,6 +250,10 @@ export const mockMenuItems: MenuItem[] = [
     image: 'https://images.unsplash.com/photo-1667207394004-acb6aaf4790e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWxpY2lvdXMlMjBwaXp6YSUyMG1hcmdoZXJpdGF8ZW58MXx8fHwxNzU4OTYyMzM3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     category: 'Pizzas',
     available: true,
+    isHighlighted: true,
+    highlightType: 'chef-recommendation',
+    highlightLabel: 'Recomendação do Chefe',
+    orderCount: 156,
     modifiers: [
       {
         id: 'size',
@@ -284,6 +288,10 @@ export const mockMenuItems: MenuItem[] = [
     image: 'https://images.unsplash.com/photo-1628676825875-031ad212c31e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN1c2hpJTIwcm9sbHN8ZW58MXx8fHwxNzU4OTUwOTQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     category: 'Rolls',
     available: true,
+    isHighlighted: true,
+    highlightType: 'popular',
+    highlightLabel: 'Mais Pedido',
+    orderCount: 203,
     modifiers: [
       {
         id: 'spicy',
@@ -307,6 +315,10 @@ export const mockMenuItems: MenuItem[] = [
     image: 'https://images.unsplash.com/photo-1627378378955-a3f4e406c5de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxnb3VybWV0JTIwYnVyZ2VyJTIwZnJpZXN8ZW58MXx8fHwxNzU5MDAzNjY3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     category: 'Hambúrgueres',
     available: true,
+    isHighlighted: true,
+    highlightType: 'promotion',
+    highlightLabel: 'Promoção',
+    orderCount: 89,
     modifiers: [
       {
         id: 'temperature',

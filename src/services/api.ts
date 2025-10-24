@@ -1,6 +1,9 @@
 // API Base URL - configurar no .env
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+import { isDemoMode } from '@/lib/utils/demo-mode';
+import { DemoService } from '@/services/demo/demo.service';
+
 export interface AddressData {
   street: string;
   number: string;
@@ -152,6 +155,22 @@ export const apiService = {
    * Cria um novo pedido
    */
   async createOrder(payload: CreateOrderPayload, customerToken?: string): Promise<CreateOrderResponse> {
+    // Se estiver em modo demo, simular criação de pedido
+    if (isDemoMode()) {
+      await DemoService.delay(1500); // Simular delay da API
+      
+      return {
+        success: true,
+        data: {
+          id: Math.floor(Math.random() * 10000) + 1000,
+          status: 'pending',
+          total: payload.totalAmount,
+          createdAt: new Date().toISOString(),
+          estimatedDeliveryTime: '30-45 min'
+        }
+      };
+    }
+
     try {
       const url = `${API_BASE_URL}/order`;
       const headers: HeadersInit = {

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MenuItem } from '@/types/entities.types';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { animations } from '@/lib/animations';
+import { HighlightBadge } from './HighlightBadge';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -24,6 +25,15 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onClick }) => 
           alt={item.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
+        
+        {/* Badge de destaque */}
+        {item.isHighlighted && item.highlightType && (
+          <HighlightBadge 
+            type={item.highlightType} 
+            label={item.highlightLabel}
+          />
+        )}
+        
         {!item.available && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
             <Badge variant="destructive" className="animate-in zoom-in-95 duration-300">Esgotado</Badge>

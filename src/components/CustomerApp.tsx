@@ -3,6 +3,7 @@ import { MenuPage } from './customer/MenuPage';
 import { CartSheet } from './customer/CartSheet';
 import { CheckoutFlow } from './customer/CheckoutFlow';
 import { OrderStatus } from './customer/OrderStatus';
+import { DemoIndicator } from './DemoIndicator';
 import { useRestaurantStore, useCartStore } from '@/stores';
 
 type CustomerView = 'menu' | 'checkout' | 'order-status';
@@ -38,6 +39,8 @@ export const CustomerApp: React.FC = () => {
 
   return (
     <div className="min-h-dvh bg-background">
+      <DemoIndicator />
+      
       {currentView === 'menu' && (
         <>
           <MenuPage onStartCheckout={() => setCurrentView('checkout')} />

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MenuItemCard } from './MenuItemCard';
 import { MenuItemModal } from './MenuItemModal';
+import { HighlightedItemsSection } from './HighlightedItemsSection';
 import { useCartStore } from '@/stores/cartStore';
 import { useRestaurantStore } from '@/stores/restaurantStore';
 import { WeeklySchedule } from '@/types';
@@ -218,6 +219,14 @@ export const MenuPage: React.FC<MenuPageProps> = ({ onStartCheckout }) => {
 
       {/* Menu Content */}
       <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
+        {/* Seção de Itens em Destaque */}
+        <HighlightedItemsSection
+          items={menu}
+          onItemClick={setSelectedItem}
+          title="Recomendações do Chefe"
+          maxItems={4}
+        />
+
         {Object.entries(groupedMenu).map(([category, items]) => (
           <div key={category} className="mb-8">
             <h2 className="text-xl font-semibold mb-4 capitalize">
