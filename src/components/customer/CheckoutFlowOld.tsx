@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useCartStore, useRestaurantStore, useOrderStore } from "@/stores";
+import { useCartStore, useRestaurantStore, useOrderStore, useCustomerStore } from "@/stores";
+import { calculateDeliveryFee } from '@/services/distance.service';
 import { Order } from "@/types";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 }) => {
   const { cart, getTotalCartPrice, clearCart } = useCartStore();
   const { currentRestaurant } = useRestaurantStore();
+  const { address: savedAddress } = useCustomerStore();
   const { addOrder } = useOrderStore();
 
   const [step, setStep] = useState<"details" | "payment" | "waiting">(
@@ -50,7 +52,24 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [isExpired, setIsExpired] = useState(false);
 
   const cartTotal = getTotalCartPrice();
-  const deliveryFee = 0; // Taxa de entrega será calculada dinamicamente
+  // Calcular taxa de entrega a partir das configurações do restaurante e distância salva no cliente
+  let deliveryFee = 0; // Taxa de entrega padrão
+  try {
+    const deliverySettings = currentRestaurant?.settings?.deliverySettings ?? [];
+    const customerDist = savedAddress?.distance ?? undefined;
+    const apiPickupDist = currentRestaurant?.settings?.pickUpLocation?.distance ?? undefined;
+
+    const distToUse = (typeof customerDist === 'number' && customerDist > 0)
+      ? customerDist
+      : (typeof apiPickupDist === 'number' && apiPickupDist > 0) ? apiPickupDist : undefined;
+
+    if (distToUse != null && Array.isArray(deliverySettings) && deliverySettings.length > 0) {
+      deliveryFee = calculateDeliveryFee(distToUse, deliverySettings);
+    }
+  } catch (err) {
+    console.warn('Erro ao calcular deliveryFee (legacy flow):', err);
+    deliveryFee = 0;
+  }
   //const tax = cartTotal * 0.1;
   const finalTotal = cartTotal + deliveryFee;
 
