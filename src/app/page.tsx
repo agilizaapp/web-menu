@@ -85,88 +85,46 @@ export default function Page() {
               // O telefone completo já está salvo no localStorage
               const currentPhone = useCustomerStore.getState().phone;
 
+              // Normalizar e salvar o endereço do customer, preservando qualquer distância
+              const rawAddr = restaurant.customer.address as unknown as Record<string, unknown> | undefined;
+              let normalizedAddress: Partial<AddressData> | undefined = undefined;
+
+              if (rawAddr) {
+                normalizedAddress = {
+                  street: String(rawAddr.street ?? rawAddr.address ?? ''),
+                  number: String(rawAddr.number ?? ''),
+                  neighborhood: String(rawAddr.neighborhood ?? rawAddr.neigborhood ?? ''),
+                  postalCode: String(rawAddr.postalCode ?? rawAddr.postalcode ?? rawAddr.zip ?? ''),
+                  complement: String(rawAddr.complement ?? ''),
+                };
+
+                const possibleDist = rawAddr.distance ?? rawAddr.dist ?? rawAddr.distanceInMeters ?? null;
+                if (possibleDist != null && !isNaN(Number(possibleDist))) {
+                  normalizedAddress.distance = Number(possibleDist);
+                }
+              }
+
+              // Garantir que o endereço enviado ao store satisfaz o tipo AddressData
+              const addressToSave = normalizedAddress
+                ? {
+                    street: normalizedAddress.street ?? '',
+                    number: normalizedAddress.number ?? '',
+                    neighborhood: normalizedAddress.neighborhood ?? '',
+                    postalCode: normalizedAddress.postalCode ?? '',
+                    complement: normalizedAddress.complement ?? undefined,
+                    distance: normalizedAddress.distance,
+                  }
+                : undefined;
+
               setCustomer({
                 token,
                 name: restaurant.customer.name,
                 phone: currentPhone || restaurant.customer.phone, // Usa o que já estava salvo
-                address: restaurant.customer.address || undefined,
+                address: addressToSave,
               });
 
-              // Mensagem de boas-vindas
+              // Mensagem de boas-vindas (mantida)
               toast.success(`Bem-vindo de volta, ${restaurant.customer.name}!`);
-
-              // Se tivermos distância do cliente e regras de entrega, calcular e mostrar a taxa
-              try {
-                // Tratar address usando o tipo conhecido quando possível
-                const customerAddr = restaurant.customer.address as unknown as Partial<AddressData> | undefined;
-                const deliverySettings = restaurant.store?.configs?.settings?.deliverySettings ?? [];
-
-                // O campo de distância pode não existir no tipo, fazer parsing seguro
-                const rawDist = customerAddr
-                  ? ((customerAddr as Partial<AddressData>).distance ?? (customerAddr as Record<string, unknown>)['dist'])
-                  : null;
-                const custDist = rawDist != null ? Number(String(rawDist)) : NaN;
-
-                if (!isNaN(custDist) && Array.isArray(deliverySettings) && deliverySettings.length > 0) {
-                  // Debug: inspecionar valores para entender discrepâncias
-                  // (remova/ajuste em produção se preferir)
-                  console.debug('deliverySettings', deliverySettings);
-                  console.debug('custDist', custDist);
-
-                  // Ordenar por distance asc e escolher o maior threshold <= custDist
-                  const sortedAsc = ([...deliverySettings] as DeliverySettings[]).sort((a, b) => a.distance - b.distance);
-                  let matched: DeliverySettings = sortedAsc[0];
-                  for (const s of sortedAsc) {
-                    const sDist = Number(s.distance ?? 0);
-                    if (!isNaN(sDist) && custDist >= sDist) matched = s;
-                  }
-
-                  const feeRaw = matched?.value;
-                  const fee = feeRaw != null ? Number(feeRaw) : undefined;
-                  console.debug('matched threshold', matched, 'fee', fee);
-
-                  if (fee != null && !isNaN(fee)) {
-                    // Formatar como moeda simples (BRL)
-                    const feeLabel = typeof Intl !== 'undefined' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(fee) : `R$${fee}`;
-                    toast(`Taxa de entrega: ${feeLabel} — distância: ${custDist}m`, { icon: '🛵' });
-                  } else {
-                    console.debug('Delivery fee not available or invalid for matched threshold', matched);
-                  }
-
-                  // Se houver pickUpLocation no settings, mostrar também informações de retirada
-                  type PickupLocation = {
-                    street?: string;
-                    address?: string;
-                    number?: string | number;
-                    neigborhood?: string;
-                    neighborhood?: string;
-                    postalCode?: string;
-                    postalcode?: string;
-                    zip?: string;
-                    mapsUrl?: string;
-                    mapUrl?: string;
-                  };
-
-                  const pickup = restaurant.store?.configs?.settings?.pickUpLocation as Partial<PickupLocation> | undefined;
-                  if (pickup) {
-                    const street = pickup.street ?? pickup.address ?? '';
-                    const number = pickup.number ? String(pickup.number) : '';
-                    const neighborhood = pickup.neigborhood ?? pickup.neighborhood ?? '';
-                    const postal = pickup.postalCode ?? pickup.postalcode ?? pickup.zip ?? '';
-                    const parts: string[] = [];
-                    if (street) parts.push(number ? `${street}, ${number}` : street);
-                    if (neighborhood) parts.push(neighborhood);
-                    const pickupLabel = parts.join(' - ');
-                    const mapUrl = pickup.mapsUrl ?? pickup.mapUrl ?? '';
-
-                    const pickupMsg = `${pickupLabel}${postal ? ` • CEP ${postal}` : ''}${mapUrl ? ` — mapa: ${mapUrl}` : ''}`;
-                    toast.info(`Local de retirada: ${pickupMsg}`, { icon: '📍' });
-                  }
-                }
-              } catch (err) {
-                // Não bloquear fluxo principal se cálculo falhar
-                console.warn('Erro ao calcular taxa de entrega:', err);
-              }
             }
           }
 

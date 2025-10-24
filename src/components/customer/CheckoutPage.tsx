@@ -90,16 +90,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       }
 
       // Verificar se temos endereço completo e pickUpLocation
-      const hasCompleteAddress = addressData.street && addressData.number && addressData.neighborhood;
+      const hasCompleteAddress = Boolean(addressData.street && addressData.number && addressData.neighborhood);
       const pickUpLocation = currentRestaurant?.settings?.pickUpLocation?.label;
-      
+
+      // Se não temos pickUpLocation, não há base para cálculo
+      if (!pickUpLocation) return;
+
       // FONTES DE DISTÂNCIA (em ordem de prioridade):
       // 1. Distância do endereço do customer (retornada por /customer/{phone})
       const customerAddressDistance = addressData.distance;
       // 2. Distância do pickUpLocation (retornada por /restaurant/{slug})
       const apiDistance = currentRestaurant?.settings?.pickUpLocation?.distance;
 
-      if (!hasCompleteAddress || !pickUpLocation) {
+      // Se não temos endereço completo, mas já temos distância (ex.: cliente autenticado com address.distance),
+      // podemos prosseguir e calcular a taxa usando essa distância. Caso contrário, precisamos do endereço completo.
+      if (!hasCompleteAddress && !(customerAddressDistance && customerAddressDistance > 0)) {
         return;
       }
 
