@@ -13,7 +13,10 @@ interface LocationMapModalProps {
   isOpen: boolean;
   onClose: () => void;
   location: {
-    label: string;
+    street: string;
+    number: string;
+    neigborhood: string;
+    postalCode: string;
     mapsUrl: string;
   };
   title?: string;
@@ -25,6 +28,9 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
   location,
   title = "Localização",
 }) => {
+  // Construir o label a partir dos campos individuais
+  const locationLabel = `${location.street}, ${location.number}, ${location.neigborhood}, ${location.postalCode}`;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[calc(100%-1rem)] sm:max-w-3xl max-h-[90vh] p-0 gap-0 overflow-y-scroll">
@@ -49,7 +55,7 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
                 <DialogTitle className="text-xl mb-2">{title}</DialogTitle>
                 <DialogDescription className="text-base flex items-start gap-2">
                   <Navigation className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>{location.label}</span>
+                  <span>{locationLabel}</span>
                 </DialogDescription>
               </div>
             </div>
@@ -60,7 +66,7 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
           {/* Mapa Incorporado do Google Maps */}
           <div className="relative w-full h-[400px] rounded-lg overflow-hidden border-2 shadow-lg">
             <iframe
-              src={`https://www.google.com/maps?q=${encodeURIComponent(location.label)}&output=embed`}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(locationLabel)}&output=embed`}
               width="100%"
               height="100%"
               style={{ border: 0 }}

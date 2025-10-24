@@ -65,6 +65,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [deliveryDistance, setDeliveryDistance] = useState<number | null>(null); // em km para exibição
   const [deliveryDistanceInMeters, setDeliveryDistanceInMeters] = useState<number | null>(null); // em metros para payload
 
+
   // Preencher endereço automaticamente se vier do store (cliente autenticado com endereço salvo)
   useEffect(() => {
     if (savedAddress) {
@@ -90,21 +91,33 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       }
 
       // Verificar se temos endereço completo e pickUpLocation
-      const hasCompleteAddress = addressData.street && addressData.number && addressData.neighborhood;
-      const pickUpLocation = currentRestaurant?.settings?.pickUpLocation?.label;
-      
+      const hasCompleteAddress = Boolean(addressData.street && addressData.number && addressData.neighborhood);
+      // Construir endereço do restaurante a partir dos campos individuais
+      const pickUpLocation = currentRestaurant?.settings?.pickUpLocation;
+      const pickUpLocationLabel = pickUpLocation 
+        ? `${pickUpLocation.street}, ${pickUpLocation.number}, ${pickUpLocation.neigborhood}, ${pickUpLocation.postalCode}`
+        : "";
+
+      // Sem local base para cálculo, aborta
+      if (!pickUpLocationLabel) {
+        return;
+      }
+
       // FONTES DE DISTÂNCIA (em ordem de prioridade):
       // 1. Distância do endereço do customer (retornada por /customer/{phone})
-      const customerAddressDistance = addressData.distance;
-      // 2. Distância do pickUpLocation (retornada por /restaurant/{slug})
-      const apiDistance = currentRestaurant?.settings?.pickUpLocation?.distance;
+      const customerAddressDistance = typeof addressData.distance === 'number'
+        ? addressData.distance
+        : Number(addressData.distance ?? 0);
 
-      if (!hasCompleteAddress || !pickUpLocation) {
+      // Se temos distância do customer, podemos prosseguir independente do endereço completo
+      if (customerAddressDistance > 0) {
+        // Prosseguir com distância do customer
+      } else if (!hasCompleteAddress) {
         return;
       }
 
       // Se deliverySettings existe (tabela de taxas por distância)
-      if (Array.isArray(currentRestaurant?.settings?.deliverySettings)) {
+      if (Array.isArray(currentRestaurant?.settings?.deliverySettings) && currentRestaurant!.settings.deliverySettings.length > 0) {
         setIsCalculatingDistance(true);
 
         try {
@@ -112,17 +125,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           let distanceInKm: number;
 
           // PRIORIDADE 1: Distância do endereço do customer
-          if (customerAddressDistance && customerAddressDistance > 0) {
+          if (customerAddressDistance > 0) {
             distanceInMeters = customerAddressDistance;
             distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
           }
-          // PRIORIDADE 2: Distância do pickUpLocation (API do restaurante)
-          else if (apiDistance && apiDistance > 0) {
-            distanceInMeters = apiDistance;
-            distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
-          } 
-          // PRIORIDADE 3: Calcular via geocoding (somente se endereço NÃO estiver mascarado)
-          else {
+          // PRIORIDADE 2: Calcular via geocoding (somente se endereço NÃO estiver mascarado)
+          else if (hasCompleteAddress) {
             const customerAddress = `${addressData.street}, ${addressData.number}, ${addressData.neighborhood}, ${addressData.postalCode}`;
             
             // Verificar se o endereço está mascarado
@@ -136,10 +144,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             }
             
             // Endereço completo = pode fazer geocoding
-            const result = await calculateDistance(pickUpLocation, customerAddress);
+            const result = await calculateDistance(pickUpLocationLabel, customerAddress);
             
             distanceInMeters = result.distanceInMeters;
             distanceInKm = result.distanceInKm;
+          } else {
+            // Usar a menor taxa como fallback
+            const minFee = Math.min(...currentRestaurant!.settings.deliverySettings.map(t => t.value));
+            setCalculatedDeliveryFee(minFee);
+            setDeliveryDistance(null);
+            setDeliveryDistanceInMeters(null);
+            return;
           }
 
           // Atualizar estados com a distância obtida
@@ -147,7 +162,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           setDeliveryDistanceInMeters(distanceInMeters);
           
           // Calcular taxa baseada na distância
-          const fee = calculateDeliveryFee(distanceInMeters, currentRestaurant.settings.deliverySettings);
+          const fee = calculateDeliveryFee(distanceInMeters, currentRestaurant!.settings.deliverySettings);
           setCalculatedDeliveryFee(fee);
           
         } catch (error) {
@@ -180,7 +195,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     };
 
     calculateDistanceAndFee();
-  }, [deliveryType, addressData, currentRestaurant?.settings?.deliverySettings, currentRestaurant?.settings?.pickUpLocation]);
+  }, [deliveryType, addressData.distance, currentRestaurant?.settings?.deliverySettings, currentRestaurant?.settings?.pickUpLocation]);
 
   const cartTotal = getTotalCartPrice();
   const deliveryFee = deliveryType === "delivery" ? calculatedDeliveryFee : 0;
@@ -188,9 +203,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const finalTotal = cartTotal + deliveryFee;
 
   // Usar pickUpLocation se disponível, senão fallback para address
-  const restaurantAddress = currentRestaurant?.settings?.pickUpLocation?.label 
-    || currentRestaurant?.settings?.address 
-    || "";
+  const pickUpLocation = currentRestaurant?.settings?.pickUpLocation;
+  const restaurantAddress = pickUpLocation 
+    ? `${pickUpLocation.street}, ${pickUpLocation.number}, ${pickUpLocation.neigborhood}, ${pickUpLocation.postalCode}`
+    : currentRestaurant?.settings?.address || "Endereço não disponível";
 
   // Função para limpar carrinho e voltar ao menu
   const handleClearCart = () => {
@@ -397,11 +413,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                           </span>
                         ) : deliveryDistance !== null ? (
                           <>
-                            {/* {deliveryDistance.toFixed(2)}km - R$ {deliveryToShow.toFixed(2)} */}
+                            {deliveryDistance.toFixed(2)}km - R$ {deliveryToShow.toFixed(2)}
                           </>
                         ) : (
                           <>
-                          {/* Taxa: R$ {deliveryToShow.toFixed(2)} */}
+                          Taxa: R$ {deliveryToShow.toFixed(2)}
                           </>
                         )}
                       </p>
@@ -443,7 +459,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       <div className="flex-1">
                         <p className="font-medium text-sm mb-1">Local de Retirada</p>
                         <p className="text-sm text-muted-foreground mb-3">
-                          {currentRestaurant.settings.pickUpLocation.label}
+                          {restaurantAddress}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Button

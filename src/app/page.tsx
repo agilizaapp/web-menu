@@ -8,6 +8,8 @@ import { RestaurantsService } from '@/services/restaurant/restaurant.service';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/utils/api-error';
 import type { MenuItem } from '@/types/entities.types';
+import type { AddressData } from '@/types';
+import type { DeliverySettings } from '@/types/entities.types';
 import { CustomerApp } from '@/components/CustomerApp';
 
 /* mock */
@@ -82,13 +84,46 @@ export default function Page() {
               // NÃO atualizar o telefone - API retorna mascarado (67)*****1768
               // O telefone completo já está salvo no localStorage
               const currentPhone = useCustomerStore.getState().phone;
-              
+
+              // Normalizar e salvar o endereço do customer, preservando qualquer distância
+              const rawAddr = restaurant.customer.address as unknown as Record<string, unknown> | undefined;
+              let normalizedAddress: Partial<AddressData> | undefined = undefined;
+
+              if (rawAddr) {
+                normalizedAddress = {
+                  street: String(rawAddr.street ?? rawAddr.address ?? ''),
+                  number: String(rawAddr.number ?? ''),
+                  neighborhood: String(rawAddr.neighborhood ?? rawAddr.neigborhood ?? ''),
+                  postalCode: String(rawAddr.postalCode ?? rawAddr.postalcode ?? rawAddr.zip ?? ''),
+                  complement: String(rawAddr.complement ?? ''),
+                };
+
+                const possibleDist = rawAddr.distance ?? rawAddr.dist ?? rawAddr.distanceInMeters ?? null;
+                if (possibleDist != null && !isNaN(Number(possibleDist))) {
+                  normalizedAddress.distance = Number(possibleDist);
+                }
+              }
+
+              // Garantir que o endereço enviado ao store satisfaz o tipo AddressData
+              const addressToSave = normalizedAddress
+                ? {
+                    street: normalizedAddress.street ?? '',
+                    number: normalizedAddress.number ?? '',
+                    neighborhood: normalizedAddress.neighborhood ?? '',
+                    postalCode: normalizedAddress.postalCode ?? '',
+                    complement: normalizedAddress.complement ?? undefined,
+                    distance: normalizedAddress.distance,
+                  }
+                : undefined;
+
               setCustomer({
                 token,
                 name: restaurant.customer.name,
                 phone: currentPhone || restaurant.customer.phone, // Usa o que já estava salvo
-                address: restaurant.customer.address || undefined,
+                address: addressToSave,
               });
+
+              // Mensagem de boas-vindas (mantida)
               toast.success(`Bem-vindo de volta, ${restaurant.customer.name}!`);
             }
           }
@@ -138,7 +173,7 @@ export default function Page() {
         
         {/* Versão no rodapé */}
         <div className="pb-8">
-          <p className="text-xs text-muted-foreground/50">v0.1.1</p>
+          <p className="text-xs text-muted-foreground/50">v0.1.3</p>
         </div>
       </div>
     );

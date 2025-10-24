@@ -252,7 +252,6 @@ export function calculateDeliveryFee(
 
     // Se a distância está dentro desta faixa
     if (distanceInMeters >= currentTier.distance && (!nextTier || distanceInMeters < nextTier.distance)) {
-  // console.log(`💰 Taxa aplicada: R$ ${currentTier.value.toFixed(2)} (${distanceInMeters}m na faixa ${currentTier.distance}m)`);
       return currentTier.value;
     }
   }

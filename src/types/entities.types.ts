@@ -30,9 +30,11 @@ export interface RestaurantSettings {
   phone?: string;
   address?: string;
   pickUpLocation?: {
-    label: string;
+    street: string;
+    number: string;
+    neigborhood: string;
+    postalCode: string;
     mapsUrl: string;
-    distance?: number; // Distância em metros (quando endereço do cliente está mascarado)
   };
   minimumOrder?: number;
   estimatedDeliveryTime?: string;
