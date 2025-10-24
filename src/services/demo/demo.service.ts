@@ -13,21 +13,31 @@ export class DemoService {
   static getMockRestaurantData(): IGetAllProductsApiResponse {
     const mockRestaurant = mockRestaurants[0]; // Usar o primeiro restaurante mock
     
+    const defaultCustomHours = {
+      monday: { open: '00:00', close: '00:00', closed: true },
+      tuesday: { open: '00:00', close: '00:00', closed: true },
+      wednesday: { open: '00:00', close: '00:00', closed: true },
+      thursday: { open: '00:00', close: '00:00', closed: true },
+      friday: { open: '00:00', close: '00:00', closed: true },
+      saturday: { open: '00:00', close: '00:00', closed: true },
+      sunday: { open: '00:00', close: '00:00', closed: true },
+    };
+
     return {
       store: {
-        name: mockRestaurant.theme.name,
+        name: mockRestaurant.theme.name || mockRestaurant.name || 'Demo',
         type: "restaurant",
         configs: {
           theme: {
-            logo: mockRestaurant.theme.logo,
-            primaryColor: mockRestaurant.theme.primaryColor,
-            secondaryColor: mockRestaurant.theme.secondaryColor,
-            accentColor: mockRestaurant.theme.accentColor,
+            logo: mockRestaurant.theme.logo || '',
+            primaryColor: mockRestaurant.theme.primaryColor || '#000000',
+            secondaryColor: mockRestaurant.theme.secondaryColor || '#FFFFFF',
+            accentColor: mockRestaurant.theme.accentColor || '#888888',
           },
           settings: {
-            hours: mockRestaurant.settings.hours,
-            useCustomHours: mockRestaurant.settings.useCustomHours,
-            customHours: mockRestaurant.settings.customHours,
+            hours: mockRestaurant.settings.hours || '00:00 - 00:00',
+            useCustomHours: Boolean(mockRestaurant.settings.useCustomHours),
+            customHours: mockRestaurant.settings.customHours || defaultCustomHours,
             deliverySettings: mockRestaurant.settings.deliverySettings || [
               { distance: 5001, value: 10 },
               { distance: 3001, value: 7 },
@@ -54,8 +64,7 @@ export class DemoService {
           number: "1431",
           neighborhood: "Jardim Demo",
           postalCode: "79603070",
-          complement: "",
-          distance: 3142
+          complement: ""
         }
       },
       categories: Array.from(new Set(mockMenuItems.map(item => item.category))),

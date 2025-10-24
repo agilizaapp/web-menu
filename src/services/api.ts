@@ -162,11 +162,10 @@ export const apiService = {
       return {
         success: true,
         data: {
-          id: Math.floor(Math.random() * 10000) + 1000,
+          orderId: Math.floor(Math.random() * 10000) + 1000,
+          token: Math.random().toString(36).slice(2, 10),
           status: 'pending',
-          total: payload.totalAmount,
-          createdAt: new Date().toISOString(),
-          estimatedDeliveryTime: '30-45 min'
+          message: 'Pedido criado em modo demo',
         }
       };
     }
