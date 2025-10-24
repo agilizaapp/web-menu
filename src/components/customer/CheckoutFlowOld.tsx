@@ -57,11 +57,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   try {
     const deliverySettings = currentRestaurant?.settings?.deliverySettings ?? [];
     const customerDist = savedAddress?.distance ?? undefined;
-    const apiPickupDist = currentRestaurant?.settings?.pickUpLocation?.distance ?? undefined;
-
     const distToUse = (typeof customerDist === 'number' && customerDist > 0)
       ? customerDist
-      : (typeof apiPickupDist === 'number' && apiPickupDist > 0) ? apiPickupDist : undefined;
+      : undefined;
 
     if (distToUse != null && Array.isArray(deliverySettings) && deliverySettings.length > 0) {
       deliveryFee = calculateDeliveryFee(distToUse, deliverySettings);

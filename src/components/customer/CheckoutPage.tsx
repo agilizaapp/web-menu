@@ -89,10 +89,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return;
       }
 
-      // Verificar se temos endereço completo e pickUpLocation (ou pelo menos endereço do restaurante)
+      // Verificar se temos endereço completo e pickUpLocation
       const hasCompleteAddress = Boolean(addressData.street && addressData.number && addressData.neighborhood);
-      // fallback: se não existir pickUpLocation.label use o endereço do restaurante
-      const pickUpLocationLabel = currentRestaurant?.settings?.pickUpLocation?.label || currentRestaurant?.settings?.address || "";
+      // Construir endereço do restaurante a partir dos campos individuais
+      const pickUpLocation = currentRestaurant?.settings?.pickUpLocation;
+      const pickUpLocationLabel = pickUpLocation 
+        ? `${pickUpLocation.street}, ${pickUpLocation.number}, ${pickUpLocation.neigborhood}, ${pickUpLocation.postalCode}`
+        : "";
 
       // Sem local base para cálculo, aborta
       if (!pickUpLocationLabel) return;
@@ -102,14 +105,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       const customerAddressDistance = typeof addressData.distance === 'number'
         ? addressData.distance
         : Number(addressData.distance ?? 0);
-      // 2. Distância do pickUpLocation (retornada por /restaurant/{slug})
-      const apiDistance = typeof currentRestaurant?.settings?.pickUpLocation?.distance === 'number'
-        ? currentRestaurant!.settings.pickUpLocation!.distance
-        : Number(currentRestaurant?.settings?.pickUpLocation?.distance ?? 0);
 
       // Se não temos endereço completo, mas já temos distância (ex.: cliente autenticado com address.distance
-      // ou a API do restaurante forneceu uma distância), podemos prosseguir.
-      if (!hasCompleteAddress && !(customerAddressDistance > 0) && !(apiDistance > 0)) {
+      // podemos prosseguir.
+      if (!hasCompleteAddress && !(customerAddressDistance > 0)) {
         return;
       }
 
@@ -126,12 +125,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             distanceInMeters = customerAddressDistance;
             distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
           }
-          // PRIORIDADE 2: Distância do pickUpLocation (API do restaurante)
-          else if (apiDistance > 0) {
-            distanceInMeters = apiDistance;
-            distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
-          } 
-          // PRIORIDADE 3: Calcular via geocoding (somente se endereço NÃO estiver mascarado)
+          // PRIORIDADE 2: Calcular via geocoding (somente se endereço NÃO estiver mascarado)
           else {
             const customerAddress = `${addressData.street}, ${addressData.number}, ${addressData.neighborhood}, ${addressData.postalCode}`;
             
@@ -198,9 +192,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const finalTotal = cartTotal + deliveryFee;
 
   // Usar pickUpLocation se disponível, senão fallback para address
-  const restaurantAddress = currentRestaurant?.settings?.pickUpLocation?.label 
-    || currentRestaurant?.settings?.address 
-    || "";
+  const pickUpLocation = currentRestaurant?.settings?.pickUpLocation;
+  const restaurantAddress = pickUpLocation 
+    ? `${pickUpLocation.street}, ${pickUpLocation.number}, ${pickUpLocation.neigborhood}, ${pickUpLocation.postalCode}`
+    : currentRestaurant?.settings?.address || "Endereço não disponível";
 
   // Função para limpar carrinho e voltar ao menu
   const handleClearCart = () => {
@@ -407,11 +402,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                           </span>
                         ) : deliveryDistance !== null ? (
                           <>
-                            {/* {deliveryDistance.toFixed(2)}km - R$ {deliveryToShow.toFixed(2)} */}
+                            {deliveryDistance.toFixed(2)}km - R$ {deliveryToShow.toFixed(2)}
                           </>
                         ) : (
                           <>
-                          {/* Taxa: R$ {deliveryToShow.toFixed(2)} */}
+                          Taxa: R$ {deliveryToShow.toFixed(2)}
                           </>
                         )}
                       </p>
@@ -453,7 +448,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       <div className="flex-1">
                         <p className="font-medium text-sm mb-1">Local de Retirada</p>
                         <p className="text-sm text-muted-foreground mb-3">
-                          {currentRestaurant.settings.pickUpLocation.label}
+                          {restaurantAddress}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <Button
