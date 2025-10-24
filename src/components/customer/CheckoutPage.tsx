@@ -89,27 +89,32 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         return;
       }
 
-      // Verificar se temos endereço completo e pickUpLocation
+      // Verificar se temos endereço completo e pickUpLocation (ou pelo menos endereço do restaurante)
       const hasCompleteAddress = Boolean(addressData.street && addressData.number && addressData.neighborhood);
-      const pickUpLocation = currentRestaurant?.settings?.pickUpLocation?.label;
+      // fallback: se não existir pickUpLocation.label use o endereço do restaurante
+      const pickUpLocationLabel = currentRestaurant?.settings?.pickUpLocation?.label || currentRestaurant?.settings?.address || "";
 
-      // Se não temos pickUpLocation, não há base para cálculo
-      if (!pickUpLocation) return;
+      // Sem local base para cálculo, aborta
+      if (!pickUpLocationLabel) return;
 
       // FONTES DE DISTÂNCIA (em ordem de prioridade):
       // 1. Distância do endereço do customer (retornada por /customer/{phone})
-      const customerAddressDistance = addressData.distance;
+      const customerAddressDistance = typeof addressData.distance === 'number'
+        ? addressData.distance
+        : Number(addressData.distance ?? 0);
       // 2. Distância do pickUpLocation (retornada por /restaurant/{slug})
-      const apiDistance = currentRestaurant?.settings?.pickUpLocation?.distance;
+      const apiDistance = typeof currentRestaurant?.settings?.pickUpLocation?.distance === 'number'
+        ? currentRestaurant!.settings.pickUpLocation!.distance
+        : Number(currentRestaurant?.settings?.pickUpLocation?.distance ?? 0);
 
-      // Se não temos endereço completo, mas já temos distância (ex.: cliente autenticado com address.distance),
-      // podemos prosseguir e calcular a taxa usando essa distância. Caso contrário, precisamos do endereço completo.
-      if (!hasCompleteAddress && !(customerAddressDistance && customerAddressDistance > 0)) {
+      // Se não temos endereço completo, mas já temos distância (ex.: cliente autenticado com address.distance
+      // ou a API do restaurante forneceu uma distância), podemos prosseguir.
+      if (!hasCompleteAddress && !(customerAddressDistance > 0) && !(apiDistance > 0)) {
         return;
       }
 
       // Se deliverySettings existe (tabela de taxas por distância)
-      if (Array.isArray(currentRestaurant?.settings?.deliverySettings)) {
+      if (Array.isArray(currentRestaurant?.settings?.deliverySettings) && currentRestaurant!.settings.deliverySettings.length > 0) {
         setIsCalculatingDistance(true);
 
         try {
@@ -117,12 +122,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           let distanceInKm: number;
 
           // PRIORIDADE 1: Distância do endereço do customer
-          if (customerAddressDistance && customerAddressDistance > 0) {
+          if (customerAddressDistance > 0) {
             distanceInMeters = customerAddressDistance;
             distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
           }
           // PRIORIDADE 2: Distância do pickUpLocation (API do restaurante)
-          else if (apiDistance && apiDistance > 0) {
+          else if (apiDistance > 0) {
             distanceInMeters = apiDistance;
             distanceInKm = Math.round((distanceInMeters / 1000) * 100) / 100;
           } 
@@ -141,7 +146,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             }
             
             // Endereço completo = pode fazer geocoding
-            const result = await calculateDistance(pickUpLocation, customerAddress);
+            const result = await calculateDistance(pickUpLocationLabel, customerAddress);
             
             distanceInMeters = result.distanceInMeters;
             distanceInKm = result.distanceInKm;
@@ -152,7 +157,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           setDeliveryDistanceInMeters(distanceInMeters);
           
           // Calcular taxa baseada na distância
-          const fee = calculateDeliveryFee(distanceInMeters, currentRestaurant.settings.deliverySettings);
+          const fee = calculateDeliveryFee(distanceInMeters, currentRestaurant!.settings.deliverySettings);
           setCalculatedDeliveryFee(fee);
           
         } catch (error) {
